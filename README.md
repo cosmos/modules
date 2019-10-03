@@ -1,5 +1,19 @@
 # Cosmos Modules
 
-This repo is meant to house modules that are created outside of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk).
+![banner](cosmos-sdk-image.jpg)
 
-To find out more about the Cosmos-SDK, you can find documentation [here](https://cosmos.network/docs/).
+[![license](https://img.shields.io/github/license/cosmos/modules.svg)](https://github.com/cosmos/modules/blob/master/LICENSE)
+
+**Note**: This repository is meant to house modules that are created outside of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) repository.
+
+**Note**: Requires [Go 1.13+](https://golang.org/dl/)
+
+## Quick Start
+
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/intro.md).
+
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+
+For more, please go to the [Cosmos SDK Docs](./docs/README.md)
+
+To find helpful
