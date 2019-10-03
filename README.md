@@ -2,7 +2,7 @@
 
 ![banner](cosmos-sdk-image.jpg)
 
-[![license](https://img.shields.io/github/license/cosmos/modules.svg)](https://github.com/cosmos/modules/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/modules/blob/master/LICENSE)
 
 **Note**: This repository is meant to house modules that are created outside of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) repository.
 
