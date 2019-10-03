@@ -142,7 +142,6 @@ func SignCheckDeliver(
 	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
-
 	tx := GenTx(msgs, accNums, seq, priv...)
 
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

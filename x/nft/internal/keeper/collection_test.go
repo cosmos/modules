@@ -28,7 +28,6 @@ func TestSetCollection(t *testing.T) {
 	collection, exists = app.NFTKeeper.GetCollection(ctx, denom)
 	require.True(t, exists)
 	require.Len(t, collection.NFTs, 2)
-
 }
 func TestGetCollection(t *testing.T) {
 	app, ctx := createTestApp(false)

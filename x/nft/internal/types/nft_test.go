@@ -10,7 +10,6 @@ import (
 // ---------------------------------------- BaseNFT ---------------------------------------------------
 
 func TestBaseNFTGetMethods(t *testing.T) {
-
 	testNFT := NewBaseNFT(id, address, tokenURI)
 
 	require.Equal(t, id, testNFT.GetID())
@@ -19,7 +18,6 @@ func TestBaseNFTGetMethods(t *testing.T) {
 }
 
 func TestBaseNFTSetMethods(t *testing.T) {
-
 	testNFT := NewBaseNFT(id, address, tokenURI)
 
 	testNFT.SetOwner(address2)
@@ -41,7 +39,6 @@ TokenURI:		%s`,
 // ---------------------------------------- NFTs ---------------------------------------------------
 
 func TestNewNFTs(t *testing.T) {
-
 	emptyNFTs := NewNFTs()
 	require.Equal(t, len(emptyNFTs), 0)
 
@@ -52,7 +49,6 @@ func TestNewNFTs(t *testing.T) {
 	testNFT2 := NewBaseNFT(id2, address, tokenURI)
 	twoNFTs := NewNFTs(&testNFT, &testNFT2)
 	require.Equal(t, len(twoNFTs), 2)
-
 }
 
 func TestNFTsAppendMethod(t *testing.T) {
@@ -148,11 +144,9 @@ func TestNFTsUpdateMethod(t *testing.T) {
 	returnedNFTs, success = nfts.Update(id, &testNFT2)
 	require.False(t, success)
 	require.Equal(t, returnedNFTs.String(), nfts.String())
-
 }
 
 func TestNFTsRemoveMethod(t *testing.T) {
-
 	testNFT := NewBaseNFT(id, address, tokenURI)
 	testNFT2 := NewBaseNFT(id2, address, tokenURI)
 	nfts := NewNFTs(&testNFT, &testNFT2)

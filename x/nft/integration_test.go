@@ -5,8 +5,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/modules/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/modules/simapp"
 	"github.com/cosmos/modules/x/nft"
 	"github.com/cosmos/modules/x/nft/internal/types"
 )
@@ -35,7 +35,6 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 
 // CheckInvariants checks the invariants
 func CheckInvariants(k nft.Keeper, ctx sdk.Context) bool {
-
 	collectionsSupply := make(map[string]int)
 	ownersCollectionsSupply := make(map[string]int)
 

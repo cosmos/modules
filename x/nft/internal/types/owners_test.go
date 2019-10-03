@@ -62,7 +62,6 @@ func TestIDCollectionSupplyMethod(t *testing.T) {
 	idCollection = idCollection.AddID(id)
 	require.Nil(t, err)
 	require.Equal(t, idCollection.Supply(), 1)
-
 }
 
 func TestIDCollectionStringMethod(t *testing.T) {
@@ -75,7 +74,6 @@ IDs:        	%s,%s`, denom, id, id2))
 // ---------------------------------------- IDCollections ---------------------------------------------------
 
 func TestIDCollectionsString(t *testing.T) {
-
 	emptyCollections := IDCollections([]IDCollection{})
 	require.Equal(t, emptyCollections.String(), "")
 
@@ -93,7 +91,6 @@ IDs:        	%s,%s`, denom, id, id2, denom2, id, id2))
 // ---------------------------------------- Owner ---------------------------------------------------
 
 func TestNewOwner(t *testing.T) {
-
 	ids := []string{id, id2}
 	idCollection := NewIDCollection(denom, ids)
 	idCollection2 := NewIDCollection(denom2, ids)
@@ -104,7 +101,6 @@ func TestNewOwner(t *testing.T) {
 }
 
 func TestOwnerSupplyMethod(t *testing.T) {
-
 	owner := NewOwner(address)
 	require.Equal(t, owner.Supply(), 0)
 
@@ -119,7 +115,6 @@ func TestOwnerSupplyMethod(t *testing.T) {
 }
 
 func TestOwnerGetIDCollectionMethod(t *testing.T) {
-
 	ids := []string{id, id2}
 	idCollection := NewIDCollection(denom, ids)
 	owner := NewOwner(address, idCollection)
@@ -175,7 +170,6 @@ func TestOwnerUpdateIDCollectionMethod(t *testing.T) {
 	returnedOwner, err = owner.UpdateIDCollection(idCollection3)
 	require.NoError(t, err)
 	require.Equal(t, returnedOwner.Supply(), 4)
-
 }
 
 func TestOwnerDeleteIDMethod(t *testing.T) {

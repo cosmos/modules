@@ -34,7 +34,6 @@ var (
 
 // GetCollectionKey gets the key of a collection
 func GetCollectionKey(denom string) []byte {
-
 	h := tmhash.New()
 	_, err := h.Write([]byte(denom))
 	if err != nil {
@@ -62,7 +61,6 @@ func GetOwnersKey(address sdk.AccAddress) []byte {
 
 // GetOwnerKey gets the key of a collection owned by an account address
 func GetOwnerKey(address sdk.AccAddress, denom string) []byte {
-
 	h := tmhash.New()
 	_, err := h.Write([]byte(denom))
 	if err != nil {

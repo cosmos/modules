@@ -113,7 +113,6 @@ func ExportParamsToJSON(params simulation.Params, path string) error {
 // each's module store key and the prefix bytes of the KVPair's key.
 func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, cdc *codec.Codec, kvAs, kvBs []cmn.KVPair) (log string) {
 	for i := 0; i < len(kvAs); i++ {
-
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes
 			continue

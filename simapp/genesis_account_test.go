@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/modules/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/modules/simapp"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"

@@ -6,10 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/x/nft"
 	"github.com/cosmos/modules/x/nft/internal/keeper"
 	"github.com/cosmos/modules/x/nft/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // DONTCOVER
@@ -19,7 +19,6 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -52,7 +51,6 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -85,7 +83,6 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
 		msg := types.NewMsgMintNFT(
 			simulation.RandomAcc(r, accs).Address, // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
@@ -114,7 +111,6 @@ func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil

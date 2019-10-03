@@ -15,7 +15,6 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 	cdc *codec.Codec, queryRoute string) {
-
 	// Transfer an NFT to an address
 	r.HandleFunc(
 		"/nfts/transfer",

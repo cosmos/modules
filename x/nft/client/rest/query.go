@@ -14,7 +14,6 @@ import (
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, queryRoute string) {
-
 	// Get the total supply of a collection
 	r.HandleFunc(
 		"/nft/supply/{denom}", getSupply(cdc, cliCtx, queryRoute),
@@ -142,7 +141,6 @@ func getCollection(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute strin
 
 func getDenoms(cdc *codec.Codec, cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/denoms", queryRoute), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

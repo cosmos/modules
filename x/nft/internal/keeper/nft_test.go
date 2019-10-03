@@ -48,7 +48,6 @@ func TestGetNFT(t *testing.T) {
 	require.Equal(t, receivedNFT2.GetID(), id2)
 	require.True(t, receivedNFT2.GetOwner().Equals(address))
 	require.Equal(t, receivedNFT2.GetTokenURI(), tokenURI)
-
 }
 
 func TestUpdateNFT(t *testing.T) {
@@ -83,7 +82,6 @@ func TestUpdateNFT(t *testing.T) {
 	receivedNFT, err := app.NFTKeeper.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.Equal(t, receivedNFT.GetTokenURI(), tokenURI2)
-
 }
 
 func TestDeleteNFT(t *testing.T) {

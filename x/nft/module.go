@@ -15,10 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/x/nft/client/cli"
 	"github.com/cosmos/modules/x/nft/client/rest"
 	"github.com/cosmos/modules/x/nft/simulation"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -70,7 +70,6 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetQueryCmd gets the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
-
 }
 
 //____________________________________________________________________________
@@ -105,7 +104,6 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper) AppModule {
-
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},

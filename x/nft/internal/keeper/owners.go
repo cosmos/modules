@@ -36,7 +36,6 @@ func (k Keeper) GetOwner(ctx sdk.Context, address sdk.AccAddress) (owner types.O
 
 // GetOwnerByDenom gets the ID Collection owned by an address of a specific denom
 func (k Keeper) GetOwnerByDenom(ctx sdk.Context, owner sdk.AccAddress, denom string) (idCollection types.IDCollection, found bool) {
-
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetOwnerKey(owner, denom))
 	if b == nil {
@@ -75,12 +74,10 @@ func (k Keeper) SetOwners(ctx sdk.Context, owners []types.Owner) {
 // IterateIDCollections iterates over the IDCollections by Owner and performs a function
 func (k Keeper) IterateIDCollections(ctx sdk.Context, prefix []byte,
 	handler func(owner sdk.AccAddress, idCollection types.IDCollection) (stop bool)) {
-
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-
 		var idCollection types.IDCollection
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &idCollection)
 

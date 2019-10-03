@@ -20,7 +20,6 @@ func TestNewMsgTransferNFT(t *testing.T) {
 }
 
 func TestMsgTransferNFTValidateBasicMethod(t *testing.T) {
-
 	newMsgTransferNFT := NewMsgTransferNFT(address, address2, "", id)
 	err := newMsgTransferNFT.ValidateBasic()
 	require.Error(t, err)
@@ -70,7 +69,6 @@ func TestNewMsgEditNFTMetadata(t *testing.T) {
 }
 
 func TestMsgEditNFTMetadataValidateBasicMethod(t *testing.T) {
-
 	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(nil, id, denom, tokenURI)
 
 	err := newMsgEditNFTMetadata.ValidateBasic()
@@ -118,7 +116,6 @@ func TestNewMsgMintNFT(t *testing.T) {
 }
 
 func TestMsgMsgMintNFTValidateBasicMethod(t *testing.T) {
-
 	newMsgMintNFT := NewMsgMintNFT(nil, address2, id, denom, tokenURI)
 	err := newMsgMintNFT.ValidateBasic()
 	require.Error(t, err)
@@ -166,7 +163,6 @@ func TestNewMsgBurnNFT(t *testing.T) {
 }
 
 func TestMsgMsgBurnNFTValidateBasicMethod(t *testing.T) {
-
 	newMsgBurnNFT := NewMsgBurnNFT(nil, id, denom)
 	err := newMsgBurnNFT.ValidateBasic()
 	require.Error(t, err)

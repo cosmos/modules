@@ -43,7 +43,6 @@ func CreateTestAddrs(numAddrs int) []sdk.AccAddress {
 
 // for incode address generation
 func testAddr(addr string, bech string) sdk.AccAddress {
-
 	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		panic(err)

@@ -30,7 +30,6 @@ func TestInvalidMsg(t *testing.T) {
 }
 
 func TestTransferNFTMsg(t *testing.T) {
-
 	app, ctx := createTestApp(false)
 	h := nft.GenericHandler(app.NFTKeeper)
 
@@ -144,7 +143,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	nftAfterwards, err := app.NFTKeeper.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.Equal(t, tokenURI2, nftAfterwards.GetTokenURI())
-
 }
 
 func TestMintNFTMsg(t *testing.T) {
@@ -191,7 +189,6 @@ func TestMintNFTMsg(t *testing.T) {
 	require.False(t, res.IsOK(), "%v", res)
 
 	require.True(t, CheckInvariants(app.NFTKeeper, ctx))
-
 }
 
 func TestBurnNFTMsg(t *testing.T) {

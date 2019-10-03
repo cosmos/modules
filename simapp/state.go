@@ -22,7 +22,6 @@ import (
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
 	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
 	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
-
 		if FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
 		} else {
@@ -114,7 +113,6 @@ func AppStateRandomizedFn(
 // from a genesis.json file
 func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (
 	genState json.RawMessage, newAccs []simulation.Account, chainID string) {
-
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)

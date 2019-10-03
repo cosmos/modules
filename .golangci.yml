@@ -1,0 +1,39 @@
+run:
+  deadline: 1m
+
+linters:
+  enable-all: true
+  disable:
+    - gocyclo
+    - gochecknoinits
+    - gochecknoglobals
+    - dupl
+    - interfacer
+    - unparam
+    - lll
+    - maligned
+    - errcheck
+    - scopelint
+    - varcheck
+    - funlen
+    - godox
+    - funlen
+
+issues:
+  exclude-rules:
+    - text: "Use of weak random number generator"
+      linters:
+        - gosec
+    - text: "comment on exported var"
+      linters:
+        - golint
+    - text: "don't use an underscore in package name"
+      linters:
+        - golint
+    - text: "ST1003:"
+      linters:
+        - stylecheck
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3

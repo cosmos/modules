@@ -64,7 +64,6 @@ func TestCollectionAddNFTMethod(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, collection.String(), newCollection.String())
 	require.Equal(t, len(newCollection.NFTs), 2)
-
 }
 
 func TestCollectionUpdateNFTMethod(t *testing.T) {
@@ -86,7 +85,6 @@ func TestCollectionUpdateNFTMethod(t *testing.T) {
 
 	require.Equal(t, returnedNFT.GetOwner(), address2)
 	require.Equal(t, returnedNFT.GetTokenURI(), tokenURI2)
-
 }
 
 func TestCollectionDeleteNFTMethod(t *testing.T) {
@@ -110,7 +108,6 @@ func TestCollectionDeleteNFTMethod(t *testing.T) {
 }
 
 func TestCollectionSupplyMethod(t *testing.T) {
-
 	empty := EmptyCollection()
 	require.Equal(t, empty.Supply(), 0)
 
@@ -132,7 +129,6 @@ func TestCollectionSupplyMethod(t *testing.T) {
 	collection, err = collection.AddNFT(&testNFT)
 	require.Nil(t, err)
 	require.Equal(t, collection.Supply(), 1)
-
 }
 
 func TestCollectionStringMethod(t *testing.T) {
@@ -156,7 +152,6 @@ TokenURI:		%s`, denom, id, address.String(), tokenURI,
 // ---------------------------------------- Collections ---------------------------------------------------
 
 func TestNewCollections(t *testing.T) {
-
 	emptyCollections := NewCollections()
 	require.Empty(t, emptyCollections)
 
@@ -170,7 +165,6 @@ func TestNewCollections(t *testing.T) {
 
 	collections := NewCollections(collection, collection2)
 	require.Equal(t, len(collections), 2)
-
 }
 func TestCollectionsAppendMethod(t *testing.T) {
 	testNFT := NewBaseNFT(id, address, tokenURI)
@@ -186,10 +180,8 @@ func TestCollectionsAppendMethod(t *testing.T) {
 
 	collections = collections.Append(collections2...)
 	require.Equal(t, len(collections), 2)
-
 }
 func TestCollectionsFindMethod(t *testing.T) {
-
 	testNFT := NewBaseNFT(id, address, tokenURI)
 	nfts := NewNFTs(&testNFT)
 	collection := NewCollection(denom, nfts)
@@ -224,7 +216,6 @@ func TestCollectionsFindMethod(t *testing.T) {
 }
 
 func TestCollectionsRemoveMethod(t *testing.T) {
-
 	testNFT := NewBaseNFT(id, address, tokenURI)
 	nfts := NewNFTs(&testNFT)
 	collection := NewCollection(denom, nfts)
@@ -277,11 +268,9 @@ ID:				%s
 Owner:			%s
 TokenURI:		%s`, denom, id, address.String(), tokenURI,
 		denom2, id2, address2.String(), tokenURI2), collections.String())
-
 }
 
 func TestCollectionsEmptyMethod(t *testing.T) {
-
 	collections := NewCollections()
 	require.True(t, collections.Empty())
 
@@ -291,7 +280,6 @@ func TestCollectionsEmptyMethod(t *testing.T) {
 
 	collections = NewCollections(collection)
 	require.False(t, collections.Empty())
-
 }
 
 func TestCollectionsSortInterface(t *testing.T) {
