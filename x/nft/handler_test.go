@@ -44,7 +44,8 @@ func TestTransferNFTMsg(t *testing.T) {
 	require.False(t, res.IsOK(), "%v", res)
 
 	// Create token (collection and owner)
-	app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	require.Nil(t, err)
 	require.True(t, CheckInvariants(app.NFTKeeper, ctx))
 
 	// handle should succeed when nft exists and is transferred by owner
@@ -86,7 +87,8 @@ func TestTransferNFTMsg(t *testing.T) {
 	require.True(t, CheckInvariants(app.NFTKeeper, ctx))
 
 	// Create token (collection and owner)
-	app.NFTKeeper.MintNFT(ctx, denom2, &nft)
+	err = app.NFTKeeper.MintNFT(ctx, denom2, &nft)
+	require.Nil(t, err)
 	require.True(t, CheckInvariants(app.NFTKeeper, ctx))
 
 	transferNftMsg = types.NewMsgTransferNFT(address2, address3, denom2, id)
@@ -105,7 +107,8 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	nft := types.NewBaseNFT(id, address, tokenURI)
 
 	// Create token (collection and address)
-	app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	require.Nil(t, err)
 
 	// Define MsgTransferNft
 	failingEditNFTMetadata := types.NewMsgEditNFTMetadata(address, id, denom2, tokenURI2)
@@ -199,7 +202,8 @@ func TestBurnNFTMsg(t *testing.T) {
 	nft := types.NewBaseNFT(id, address, tokenURI)
 
 	// Create token (collection and address)
-	app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
+	require.Nil(t, err)
 
 	exists := app.NFTKeeper.IsNFT(ctx, denom, id)
 	require.True(t, exists)

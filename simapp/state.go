@@ -3,6 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"time"
@@ -111,7 +112,7 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (
+func AppStateFromGenesisFileFn(r io.Reader, cdc *codec.Codec, genesisFile string) (
 	genState json.RawMessage, newAccs []simulation.Account, chainID string) {
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {

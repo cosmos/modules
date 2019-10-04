@@ -8,16 +8,11 @@ linters:
     - gochecknoinits
     - gochecknoglobals
     - dupl
-    - interfacer
     - unparam
     - lll
-    - maligned
-    - errcheck
-    - scopelint
     - varcheck
     - funlen
     - godox
-    - funlen
 
 issues:
   exclude-rules:
@@ -25,9 +20,6 @@ issues:
       linters:
         - gosec
     - text: "comment on exported var"
-      linters:
-        - golint
-    - text: "don't use an underscore in package name"
       linters:
         - golint
     - text: "ST1003:"
