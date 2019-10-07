@@ -4,7 +4,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/simapp"
+	simapp "github.com/cosmos/modules/x/nft/app"
 	"github.com/cosmos/modules/x/nft/internal/types"
 )
 
@@ -25,6 +25,7 @@ var (
 
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
+
 	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
 
 	return app, ctx

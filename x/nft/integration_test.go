@@ -6,8 +6,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/simapp"
 	"github.com/cosmos/modules/x/nft"
+	simapp "github.com/cosmos/modules/x/nft/app"
 	"github.com/cosmos/modules/x/nft/internal/types"
 )
 
