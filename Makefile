@@ -1,4 +1,4 @@
-PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
+PACKAGES_NOSIMULATION=$(shell go list ./...)
 
 test: test-unit
 
@@ -9,7 +9,7 @@ test-unit:
 
 lint:
 	@echo "--> Running linter"
-	@golangci-lint run
+	@golangci-lint run ./...
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 .PHONY: lint

@@ -25,7 +25,7 @@ func Setup(isCheckTx bool) *SimApp {
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, 0)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewDefaultGenesisState(ModuleBasics)
+		genesisState := NewDefaultGenesisState()
 		stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 		if err != nil {
 			panic(err)
@@ -50,7 +50,7 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	// initialize the chain with the passed in genesis accounts
-	genesisState := NewDefaultGenesisState(ModuleBasics)
+	genesisState := NewDefaultGenesisState()
 
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
 	genesisStateBz := app.cdc.MustMarshalJSON(authGenesis)
