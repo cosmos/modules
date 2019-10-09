@@ -16,7 +16,6 @@ If you want to get started quickly and learn how to build on top of the SDK, ple
 
 For more, please go to the [Cosmos SDK Docs](https://github.com/cosmos/cosmos-sdk/docs/README.md)
 
-To find helpful
 To find out more about the Cosmos-SDK, you can find documentation [here](https://cosmos.network/docs/).
 
 This repo organizes modules into 3 subfolders:
