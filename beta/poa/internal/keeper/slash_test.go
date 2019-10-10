@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/poa/internal/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/modules/beta/poa/internal/types"
 )
 
 // setup helper function - creates two validators
@@ -57,25 +58,27 @@ func TestSlashAtFutureHeight(t *testing.T) {
 }
 
 // tests Slash at the current height
-// func TestSlashValidatorAtCurrentHeight(t *testing.T) {
-// 	ctx, keeper, _ := setupHelper(t)
-// 	consAddr := sdk.ConsAddress(PKs[0].Address())
-// 	fraction := sdk.NewDecWithPrec(5, 1)
+func TestSlashValidatorAtCurrentHeight(t *testing.T) {
+	ctx, keeper, _ := setupHelper(t)
+	ctx = ctx.WithBlockHeight(2)
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
 
-// 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
-// 	require.True(t, found)
-// 	keeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
+	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
+	fmt.Println(validator)
+	require.True(t, found)
+	keeper.Slash(ctx, consAddr, int64(1), 10, fraction)
 
-// 	// read updated state
-// 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
-// 	require.True(t, found)
+	// read updated state
+	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
+	fmt.Println(validator)
+	require.True(t, found)
 
-// 	// end block
-// 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-// 	fmt.Println("here")
-// 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+	// end block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
-// 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
-// 	// power decreased
-// 	require.Equal(t, int64(5), validator.GetConsensusPower())
-// }
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
+	// power decreased
+	require.Equal(t, int64(5), validator.GetConsensusPower())
+}

@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	poaexported "github.com/cosmos/cosmos-sdk/x/poa/exported"
+	poaexported "github.com/cosmos/modules/beta/poa/exported"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/poa/exported"
-	"github.com/cosmos/cosmos-sdk/x/poa/internal/types"
+	"github.com/cosmos/modules/beta/poa/exported"
+	"github.com/cosmos/modules/beta/poa/internal/types"
 )
 
 // iterate through the validator set and perform the provided function

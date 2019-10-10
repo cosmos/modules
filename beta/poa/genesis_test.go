@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/poa"
+	"github.com/cosmos/modules/beta/poa"
 )
 
 func TestInitDefaultGenesis(t *testing.T) {

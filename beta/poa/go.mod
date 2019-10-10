@@ -1,9 +1,9 @@
-module github.com/cosmos/modules/x/poa
+module github.com/cosmos/modules/beta/poa
 
 go 1.13
 
 require (
-	github.com/cosmos/cosmos-sdk v0.34.4-0.20191007171707-fd76e62f4943
+	github.com/cosmos/cosmos-sdk v0.34.4-0.20191008204841-1a33f1c8cba6
 	github.com/gorilla/mux v1.7.3
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5

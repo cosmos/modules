@@ -77,6 +77,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			infractionHeight))
 
 	case infractionHeight < ctx.BlockHeight():
+		fmt.Println(remainingSlashAmount, "here", validator.Weight, "end", infractionHeight, ctx.BlockHeight())
 
 		// cannot decrease balance below zero
 		weightRemoval := sdk.MinInt(remainingSlashAmount, validator.Weight)

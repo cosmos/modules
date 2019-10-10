@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
-	"github.com/cosmos/cosmos-sdk/x/poa/internal/types"
+	"github.com/cosmos/modules/beta/poa/internal/types"
 )
 
 var (

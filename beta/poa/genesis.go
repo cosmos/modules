@@ -7,8 +7,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/poa/exported"
-	"github.com/cosmos/cosmos-sdk/x/poa/internal/types"
+	"github.com/cosmos/modules/beta/poa/exported"
+	"github.com/cosmos/modules/beta/poa/internal/types"
 )
 
 // InitGenesis sets the parameters for the provided keeper. For each
