@@ -1,13 +1,27 @@
 # Cosmos Modules
 
-This repo is meant to house modules that are created outside of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk).
+![banner](cosmos-sdk-image.jpg)
+
+[![license](https://img.shields.io/github/license/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/modules/blob/master/LICENSE)
+
+**Note**: This repository is meant to house modules that are created outside of the [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) repository.
+
+**Note**: Requires [Go 1.13+](https://golang.org/dl/)
+
+## Quick Start
+
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](https://github.com/cosmos/cosmos-sdk/docs/intro/intro.md).
+
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+
+For more, please go to the [Cosmos SDK Docs](https://github.com/cosmos/cosmos-sdk/docs/README.md)
 
 To find out more about the Cosmos-SDK, you can find documentation [here](https://cosmos.network/docs/).
 
 This repo organizes modules into 3 subfolders:
 
 - `stable/`: this folder houses modules that are stable, production-ready, and well-maintained.
-- `incubator/`: this folder houses modules that are buildable but makes no guarantees on stability or production-readiness. Once a module meets all requirements specified in [contributing guidelines](./CONTRIBUTING.md), the owners can make a PR to move module into `stable/` folder. Must be approved by at least one `modules` maintainer for the module to be moved.
+- `beta/`: this folder houses modules that are buildable but makes no guarantees on stability or production-readiness. Once a module meets all requirements specified in [contributing guidelines](./CONTRIBUTING.md), the owners can make a PR to move module into `stable/` folder. Must be approved by at least one `modules` maintainer for the module to be moved.
 - `inactive/`: Any stale module from the previous 2 folders may be moved to the `inactive` folder if it is no longer being maintained by its owners. `modules` maintainers reserve the right to move a module into this folder after public discussion in an issue and a specified grace period for module owners to restart work on module.
 
 Any changes to where modules are located will only happen on major releases of the `modules` repo to ensure we only break import paths on major releases.
