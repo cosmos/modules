@@ -4,7 +4,7 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/x/nft/internal/keeper"
+	"github.com/cosmos/modules/incubator/nft/internal/keeper"
 )
 
 func getRandomNFTFromOwner(ctx sdk.Context, k keeper.Keeper, r *rand.Rand) (address sdk.AccAddress, denom, nftID string) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 func TestGetOwners(t *testing.T) {

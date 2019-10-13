@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/x/nft"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 const (

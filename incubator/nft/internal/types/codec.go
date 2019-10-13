@@ -4,7 +4,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/modules/x/nft/exported"
+	"github.com/cosmos/modules/incubator/nft/exported"
 )
 
 // RegisterCodec concrete types on codec

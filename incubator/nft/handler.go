@@ -6,8 +6,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/x/nft/internal/keeper"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/internal/keeper"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // GenericHandler routes the messages to the handlers

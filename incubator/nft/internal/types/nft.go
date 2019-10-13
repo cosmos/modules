@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/x/nft/exported"
+	"github.com/cosmos/modules/incubator/nft/exported"
 )
 
 var _ exported.NFT = (*BaseNFT)(nil)
