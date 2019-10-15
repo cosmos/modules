@@ -16,9 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/modules/x/nft/client/cli"
-	"github.com/cosmos/modules/x/nft/client/rest"
-	"github.com/cosmos/modules/x/nft/simulation"
+	"github.com/cosmos/modules/incubator/nft/client/cli"
+	"github.com/cosmos/modules/incubator/nft/client/rest"
+	"github.com/cosmos/modules/incubator/nft/simulation"
 )
 
 var (

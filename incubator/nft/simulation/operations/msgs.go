@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/modules/x/nft"
-	"github.com/cosmos/modules/x/nft/internal/keeper"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft"
+	"github.com/cosmos/modules/incubator/nft/internal/keeper"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // DONTCOVER

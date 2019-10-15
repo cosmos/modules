@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/modules/x/nft/exported"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/exported"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

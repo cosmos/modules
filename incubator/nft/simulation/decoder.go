@@ -7,7 +7,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding gov type

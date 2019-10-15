@@ -26,7 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/cosmos/modules/x/nft"
+	"github.com/cosmos/modules/incubator/nft"
 )
 
 const appName = "SimApp"

@@ -4,8 +4,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/cosmos/modules/x/nft/app"
-	"github.com/cosmos/modules/x/nft/internal/types"
+	simapp "github.com/cosmos/modules/incubator/nft/app"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // nolint: deadcode unused
