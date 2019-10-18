@@ -17,8 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/modules/beta/poa/internal/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -102,7 +102,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// // GetCmdUnbond implements the unbond validator command.
+// GetCmdUnbond implements the unbond validator command.
 // func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 // 	return &cobra.Command{
 // 		Use:   "unbond [validator-addr] ",

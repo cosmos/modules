@@ -1,10 +1,11 @@
-module github.com/cosmos/modules/beta/poa
+module github.com/cosmos/modules/incubator/poa
 
 go 1.13
 
 require (
 	github.com/cosmos/cosmos-sdk v0.34.4-0.20191008204841-1a33f1c8cba6
 	github.com/gorilla/mux v1.7.3
+	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0

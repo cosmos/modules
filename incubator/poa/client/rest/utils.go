@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/modules/beta/poa/internal/types"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {

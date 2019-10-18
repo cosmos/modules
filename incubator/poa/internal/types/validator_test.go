@@ -95,7 +95,7 @@ func TestRemoveTokens(t *testing.T) {
 
 func TestUpdateStatus(t *testing.T) {
 	validator := NewValidator(sdk.ValAddress(pk1.Address().Bytes()), pk1, stakingtypes.Description{})
-	require.Equal(t, sdk.Unbonded, validator.Status)
+	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, int64(10), validator.Weight.Int64())
 
 	// Unbonded to Bonded

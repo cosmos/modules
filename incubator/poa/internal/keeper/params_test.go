@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/modules/beta/poa/internal/types"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 func TestParams(t *testing.T) {

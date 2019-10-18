@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/modules/beta/poa/internal/types"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 // Implements StakingHooks interface

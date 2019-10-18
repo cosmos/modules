@@ -2,17 +2,34 @@ run:
   deadline: 1m
 
 linters:
-  enable-all: true
-  disable:
-    - gocyclo
-    - gochecknoinits
-    - gochecknoglobals
-    - dupl
-    - unparam
-    - lll
-    - varcheck
-    - funlen
-    - godox
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    # - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - misspell
 
 issues:
   exclude-rules:

@@ -17,8 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/modules/beta/poa/client/cli"
-	"github.com/cosmos/modules/beta/poa/client/rest"
+	"github.com/cosmos/modules/incubator/poa/client/cli"
+	"github.com/cosmos/modules/incubator/poa/client/rest"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )

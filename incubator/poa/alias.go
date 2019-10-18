@@ -1,8 +1,8 @@
 package poa
 
 import (
-	"github.com/cosmos/modules/beta/poa/internal/keeper"
-	"github.com/cosmos/modules/beta/poa/internal/types"
+	"github.com/cosmos/modules/incubator/poa/internal/keeper"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 const (

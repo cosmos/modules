@@ -28,8 +28,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := sdk.TokensFromConsensusPower(power) // reuse of a function, but it relates to weight
-	slashAmountDec := amount.ToDec().Mul(slashFactor)
+	amount := sdk.NewDecFromInt(sdk.NewInt(power)) // reuse of a function, but it relates to weight
+	slashAmountDec := amount.Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
@@ -52,68 +52,47 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	operatorAddress := validator.GetOperator()
-
 	// call the before-modification hook
 	k.BeforeValidatorModified(ctx, operatorAddress)
-
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
 	// redelegations, as that stake has since unbonded
 	remainingSlashAmount := slashAmount
-
 	switch {
 	case infractionHeight > ctx.BlockHeight():
-
 		// Can't slash infractions in the future
 		panic(fmt.Sprintf(
 			"impossible attempt to slash future infraction at height %d but we are at height %d",
 			infractionHeight, ctx.BlockHeight()))
-
 	case infractionHeight == ctx.BlockHeight():
-
 		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
 		logger.Info(fmt.Sprintf(
 			"slashing at current height %d, not scanning unbonding delegations & redelegations",
 			infractionHeight))
-
-	case infractionHeight < ctx.BlockHeight():
-		fmt.Println(remainingSlashAmount, "here", validator.Weight, "end", infractionHeight, ctx.BlockHeight())
-
-		// cannot decrease balance below zero
-		weightRemoval := sdk.MinInt(remainingSlashAmount, validator.Weight)
-		weightRemoval = sdk.MaxInt(weightRemoval, sdk.ZeroInt()) // defensive.
-
-		// we need to calculate the *effective* slash fraction for distribution
-		if validator.Weight.GT(sdk.ZeroInt()) {
-			effectiveFraction := weightRemoval.ToDec().QuoRoundUp(validator.Weight.ToDec())
-			// possible if power has changed
-			if effectiveFraction.GT(sdk.OneDec()) {
-				effectiveFraction = sdk.OneDec()
-			}
-			// call the before-slashed hook
-			k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
-		}
-
-		// switch validator.GetStatus() {
-		// case sdk.Bonded:
-		// 	if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
-		// 		panic(err)
-		// 	}
-		// case sdk.Unbonding, sdk.Unbonded:
-		// 	if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
-		// 		panic(err)
-		// 	}
-		// default:
-		// 	panic("invalid validator status")
-		// }
-
-		// Log that a slash occurred!
-		logger.Info(fmt.Sprintf(
-			"validator %s slashed by slash factor of %s; burned %v tokens",
-			validator.GetOperator(), slashFactor.String(), weightRemoval))
-
-		return
 	}
+
+	// cannot decrease balance below zero
+	weightToRemove := sdk.MinInt(remainingSlashAmount, validator.Weight)
+	weightToRemove = sdk.MaxInt(weightToRemove, sdk.ZeroInt()) // defensive.
+
+	// we need to calculate the *effective* slash fraction for distribution
+	if validator.Weight.IsPositive() {
+		effectiveFraction := weightToRemove.ToDec().QuoRoundUp(validator.Weight.ToDec())
+		// possible if power has changed
+		if effectiveFraction.GT(sdk.OneDec()) {
+			effectiveFraction = sdk.OneDec()
+		}
+		// call the before-slashed hook
+		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+	}
+
+	// Deduct from validator's weight and update the validator.
+	validator = k.RemoveValidatorWeight(ctx, validator, weightToRemove)
+
+	// Log that a slash occurred!
+	logger.Info(fmt.Sprintf(
+		"validator %s slashed by slash factor of %s; burned %v tokens",
+		validator.GetOperator(), slashFactor.String(), weightToRemove))
 }
 
 // jail a validator

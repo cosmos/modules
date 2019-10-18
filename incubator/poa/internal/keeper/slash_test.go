@@ -1,14 +1,13 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/modules/beta/poa/internal/types"
+	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
 
 // setup helper function - creates two validators
@@ -62,16 +61,16 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t)
 	ctx = ctx.WithBlockHeight(2)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
+	fraction := sdk.NewDecWithPrec(2, 1)
 
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
-	fmt.Println(validator)
+	// fmt.Println(validator)
 	require.True(t, found)
-	keeper.Slash(ctx, consAddr, int64(1), 10, fraction)
+	keeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
 
 	// read updated state
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
-	fmt.Println(validator)
+	// fmt.Println(validator)
 	require.True(t, found)
 
 	// end block
@@ -80,5 +79,5 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddress)
 	// power decreased
-	require.Equal(t, int64(5), validator.GetConsensusPower())
+	require.Equal(t, int64(8), validator.GetConsensusPower())
 }
