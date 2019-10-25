@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,12 +21,15 @@ const (
 	RouterKey = ModuleName
 )
 
+// nolint
 var (
-	// KeyNextCodeID     = []byte("nextCodeId")
 	KeyNextContractID = []byte("nextContractId")
+
+	CodeKeyPrefix = []byte{0x01}
 )
 
-// KeyContractCode returns the key for retrieving a contract code by address
-func KeyContractCode(id sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("n/%x", id))
+// GetCodeKey constructs the key for retreiving the ID for the WASM code
+func GetCodeKey(contractID uint64) []byte {
+	contractIDBz := sdk.Uint64ToBigEndian(contractID)
+	return append(CodeKeyPrefix, contractIDBz...)
 }

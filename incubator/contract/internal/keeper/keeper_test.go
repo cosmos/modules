@@ -31,34 +31,9 @@ func TestCreate(t *testing.T) {
 	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
-	contractAddr, err := keeper.Create(ctx, creator, wasmCode, deposit)
+	contractID, err := keeper.Create(ctx, creator, wasmCode, deposit)
 	require.NoError(t, err)
-	require.Equal(t, contractAddr.Empty(), false)
-
-	require.Fail(t, "failureMessage string")
-}
-
-func TestInstantiate(t *testing.T) {
-	// remove existing wasmer directory
-	home, err := os.UserHomeDir()
-	require.NoError(t, err)
-	os.RemoveAll(path.Join(home, ".wasmer"))
-
-	ctx, accKeeper, keeper := CreateTestInput(t, false)
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
-
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
-	require.NoError(t, err)
-
-	contractAddr, err := keeper.Create(ctx, creator, wasmCode, deposit)
-	require.NoError(t, err)
-	require.Equal(t, contractAddr.Empty(), false)
-
-	msg := []byte(`{"verifier": "fred", "beneficiary": "bob"}`)
-	res := keeper.Instantiate(ctx, contractAddr, msg)
-	// require.NotNil(t, res.Data)
-	require.Nil(t, res.Data)
+	require.Equal(t, uint64(0), contractID)
 }
 
 func createFakeFundedAccount(ctx sdk.Context, am auth.AccountKeeper, coins sdk.Coins) sdk.AccAddress {

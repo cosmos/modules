@@ -20,13 +20,9 @@ import (
 func MakeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 
-	// Register Msgs
-	// cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	// cdc.RegisterConcrete(bank.MsgSend{}, "test/staking/Send", nil)
-
 	// Register AppAccount
 	cdc.RegisterInterface((*authexported.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/contract/BaseAccount", nil)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
