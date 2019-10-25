@@ -36,6 +36,37 @@ func TestCreate(t *testing.T) {
 	require.Equal(t, uint64(0), contractID)
 }
 
+func TestInstantiate(t *testing.T) {
+	// remove existing wasmer directory
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	os.RemoveAll(path.Join(home, ".wasmer"))
+
+	ctx, accKeeper, keeper := CreateTestInput(t, false)
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
+	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
+
+	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	require.NoError(t, err)
+
+	contractID, err := keeper.Create(ctx, creator, wasmCode)
+	require.NoError(t, err)
+
+	initMsg := InitMsg{
+		Verifier:    "fred",
+		Beneficiary: "bob",
+	}
+
+	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
+	require.NoError(t, err)
+	require.Equal(t, "cosmos1gvqqqqqqqqqqqqqqqqqqqqqqqqqqqqqql35z9f", addr.String())
+}
+
+type InitMsg struct {
+	Verifier    string `json:"verifier"`
+	Beneficiary string `json:"beneficiary"`
+}
+
 func createFakeFundedAccount(ctx sdk.Context, am auth.AccountKeeper, coins sdk.Coins) sdk.AccAddress {
 	_, _, addr := keyPubAddr()
 	baseAcct := auth.NewBaseAccountWithAddress(addr)
