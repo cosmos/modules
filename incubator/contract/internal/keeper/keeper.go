@@ -116,11 +116,11 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, params 
 func (k Keeper) autoIncrementID(ctx sdk.Context, nextIDKey []byte) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(nextIDKey)
-	var id uint64 = 0
+	var id uint64
 	if bz != nil {
-		k.cdc.MustUnmarshalBinaryBare(bz, &id)
+		id = binary.BigEndian.Uint64(bz)
 	}
-	bz = k.cdc.MustMarshalBinaryBare(id + 1)
+	bz = sdk.Uint64ToBigEndian(id + 1)
 	store.Set(nextIDKey, bz)
 	return id
 }
