@@ -103,7 +103,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, contractID 
 	}
 
 	// persist instance
-	instance := types.NewInstance(contractID, prefixStore)
+	instance := types.NewInstance(contractID, creator, initMsgBz, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryLengthPrefixed(instance))
 

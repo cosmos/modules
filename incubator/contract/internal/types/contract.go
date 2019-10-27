@@ -23,8 +23,10 @@ func NewContractInfo(codeID []byte, creator sdk.AccAddress) ContractInfo {
 
 // Instance stores a WASM contract instance
 type Instance struct {
-	ContractID  uint64       `json:"contract_id"`
-	PrefixStore prefix.Store `json:"prefix_store"`
+	ContractID  uint64         `json:"contract_id"`
+	Creator     sdk.AccAddress `json:"creator"`
+	InitMsg     []byte         `json:"init_msg"`
+	PrefixStore prefix.Store   `json:"prefix_store"`
 }
 
 // NewInstanceParams initializes params for a contract instance
@@ -59,9 +61,11 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 }
 
 // NewInstance creates a new instance of a given WASM contract
-func NewInstance(contractID uint64, prefixStore prefix.Store) Instance {
+func NewInstance(contractID uint64, creator sdk.AccAddress, initMsg []byte, prefixStore prefix.Store) Instance {
 	return Instance{
 		ContractID:  contractID,
+		Creator:     creator,
+		InitMsg:     initMsg,
 		PrefixStore: prefixStore,
 	}
 }
