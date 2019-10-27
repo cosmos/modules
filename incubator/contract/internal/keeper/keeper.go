@@ -49,7 +49,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte)
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	contractID = k.autoIncrementID(ctx, types.KeyNextContractID)
+	contractID = k.autoIncrementID(ctx, types.KeyLastContractID)
 	contractInfo := types.NewContractInfo(codeID, creator)
 	// 0x01 | ContractID (uint64) -> ContractInfo
 	store.Set(types.GetCodeKey(contractID), k.cdc.MustMarshalBinaryLengthPrefixed(contractInfo))
@@ -113,15 +113,15 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, params 
 	return sdk.Result{}
 }
 
-func (k Keeper) autoIncrementID(ctx sdk.Context, nextIDKey []byte) uint64 {
+func (k Keeper) autoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(nextIDKey)
-	var id uint64
+	bz := store.Get(lastIDKey)
+	id := uint64(1)
 	if bz != nil {
 		id = binary.BigEndian.Uint64(bz)
 	}
 	bz = sdk.Uint64ToBigEndian(id + 1)
-	store.Set(nextIDKey, bz)
+	store.Set(lastIDKey, bz)
 	return id
 }
 

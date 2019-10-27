@@ -23,7 +23,7 @@ const (
 
 // nolint
 var (
-	KeyNextContractID = []byte("nextContractId")
+	KeyLastContractID = []byte("lastContractId")
 
 	CodeKeyPrefix       = []byte{0x01}
 	ContractKeyPrefix   = []byte{0x02}

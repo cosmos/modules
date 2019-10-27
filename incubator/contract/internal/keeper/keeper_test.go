@@ -30,7 +30,7 @@ func TestCreate(t *testing.T) {
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode)
 	require.NoError(t, err)
-	require.Equal(t, uint64(0), contractID)
+	require.Equal(t, uint64(1), contractID)
 }
 
 func TestInstantiate(t *testing.T) {
@@ -53,7 +53,7 @@ func TestInstantiate(t *testing.T) {
 
 	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
 	require.NoError(t, err)
-	require.Equal(t, "cosmos1gvqqqqqqqqqqqqqqqqqqqqqqqqqqqqqql35z9f", addr.String())
+	require.Equal(t, "cosmos1gvqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqlzsxy0", addr.String())
 }
 
 type InitMsg struct {
