@@ -19,10 +19,7 @@ func TestNewKeeper(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	// remove existing wasmer directory
-	home, err := os.UserHomeDir()
-	require.NoError(t, err)
-	os.RemoveAll(path.Join(home, ".wasmer"))
+	os.RemoveAll(path.Join("/tmp", "contract"))
 
 	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -37,10 +34,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	// remove existing wasmer directory
-	home, err := os.UserHomeDir()
-	require.NoError(t, err)
-	os.RemoveAll(path.Join(home, ".wasmer"))
+	os.RemoveAll(path.Join("/tmp", "contract"))
 
 	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))

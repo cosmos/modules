@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
-	"os"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
@@ -27,12 +26,8 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new contract Keeper instance
-func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper) Keeper {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	wasmer, err := wasm.NewWasmer(filepath.Join(home, ".wasmer"), 3)
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper, homeDir string) Keeper {
+	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "contract"), 3)
 	if err != nil {
 		panic(err)
 	}

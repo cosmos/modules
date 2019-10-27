@@ -62,7 +62,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 		nil,
 	)
 
-	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk)
+	homeDir := "/tmp"
+	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, homeDir)
 
 	return ctx, accountKeeper, keeper
 }
