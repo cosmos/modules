@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -53,8 +54,10 @@ func TestInstantiate(t *testing.T) {
 		Verifier:    "fred",
 		Beneficiary: "bob",
 	}
+	initMsgBz, err := json.Marshal(initMsg)
+	require.NoError(t, err)
 
-	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
+	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 }

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
@@ -59,7 +58,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte)
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint64, initMsg interface{}, deposit sdk.Coins) (sdk.AccAddress, sdk.Error) {
+func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint64, initMsg []byte, deposit sdk.Coins) (sdk.AccAddress, sdk.Error) {
 	// create contract address
 	contractAddress := k.generateContractAddress(ctx, codeID)
 	existingAccnt := k.accountKeeper.GetAccount(ctx, contractAddress)
@@ -82,10 +81,6 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 
 	// prepare params for contract instantiate call
 	params := types.NewInstanceParams(ctx, creator, deposit, contractAccount)
-	initMsgBz, err := json.Marshal(initMsg)
-	if err != nil {
-		return nil, sdk.ErrUnknownRequest("error encoding init message")
-	}
 
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
@@ -93,13 +88,13 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
-	_, err = k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsgBz, prefixStore, 100000000)
+	_, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, 100000000)
 	if err != nil {
 		return contractAddress, types.ErrInstantiateFailed(err)
 	}
 
 	// persist instance
-	instance := types.NewInstance(codeID, creator, initMsgBz, prefixStore)
+	instance := types.NewInstance(codeID, creator, initMsg, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(instance))
 
