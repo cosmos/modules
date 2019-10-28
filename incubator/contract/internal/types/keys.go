@@ -23,10 +23,11 @@ const (
 
 // nolint
 var (
-	KeyLastCodeID = []byte("lastCodeId")
+	KeyLastCodeID     = []byte("lastCodeId")
+	KeyLastInstanceID = []byte("lastInstanceId")
 
 	CodeKeyPrefix       = []byte{0x01}
-	ContractKeyPrefix   = []byte{0x02}
+	InstanceKeyPrefix   = []byte{0x02}
 	InstanceStorePrefix = []byte{0x03}
 )
 
@@ -38,7 +39,7 @@ func GetCodeKey(contractID uint64) []byte {
 
 // GetContractAddressKey returns the key for the WASM contract instance
 func GetContractAddressKey(addr sdk.AccAddress) []byte {
-	return append(ContractKeyPrefix, addr...)
+	return append(InstanceKeyPrefix, addr...)
 }
 
 // GetInstanceStorePrefixKey returns the store prefix for the WASM contract instance
