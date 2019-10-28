@@ -101,7 +101,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	// persist instance
 	instance := types.NewInstance(codeID, creator, initMsgBz, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
-	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryLengthPrefixed(instance))
+	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(instance))
 
 	return contractAddress, nil
 }
@@ -112,6 +112,13 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, params 
 	// get codeID from contractID
 	// res, err := k.wasmer.Execute(codeID, params, msgs, store, gasLimit)
 	return sdk.Result{}
+}
+
+// generates a contract address from codeID + instanceID
+func (k Keeper) generateContractAddress(ctx sdk.Context, codeID uint64) sdk.AccAddress {
+	instanceID := k.autoIncrementID(ctx, types.KeyLastInstanceID)
+	contractID := codeID<<32 + instanceID
+	return addrFromUint64(contractID)
 }
 
 func (k Keeper) autoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
@@ -131,10 +138,4 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	addr[0] = 'C'
 	binary.PutUvarint(addr[1:], id)
 	return sdk.AccAddress(crypto.AddressHash(addr))
-}
-
-func (k Keeper) generateContractAddress(ctx sdk.Context, codeID uint64) sdk.AccAddress {
-	instanceID := k.autoIncrementID(ctx, types.KeyLastInstanceID)
-	contractID := codeID<<32 + instanceID
-	return addrFromUint64(contractID)
 }
