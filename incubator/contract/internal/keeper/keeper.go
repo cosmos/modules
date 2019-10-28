@@ -43,25 +43,25 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.Accou
 }
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
-func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte) (contractID uint64, sdkErr sdk.Error) {
-	codeID, err := k.wasmer.Create(wasmCode)
+func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte) (codeID uint64, sdkErr sdk.Error) {
+	codeHash, err := k.wasmer.Create(wasmCode)
 	if err != nil {
 		return 0, types.ErrCreateFailed(err)
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	contractID = k.autoIncrementID(ctx, types.KeyLastContractID)
-	contractInfo := types.NewContractInfo(codeID, creator)
-	// 0x01 | ContractID (uint64) -> ContractInfo
-	store.Set(types.GetCodeKey(contractID), k.cdc.MustMarshalBinaryLengthPrefixed(contractInfo))
+	codeID = k.autoIncrementID(ctx, types.KeyLastCodeID)
+	contractInfo := types.NewCodeInfo(codeHash, creator)
+	// 0x01 | codeID (uint64) -> ContractInfo
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshalBinaryLengthPrefixed(contractInfo))
 
-	return contractID, nil
+	return codeID, nil
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, contractID uint64, initMsg interface{}, deposit sdk.Coins) (sdk.AccAddress, sdk.Error) {
+func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint64, initMsg interface{}, deposit sdk.Coins) (sdk.AccAddress, sdk.Error) {
 	// create contract address
-	contractAddress := addrFromUint64(contractID)
+	contractAddress := addrFromUint64(codeID)
 	existingAccnt := k.accountKeeper.GetAccount(ctx, contractAddress)
 	if existingAccnt != nil {
 		return nil, types.ErrAccountExists(existingAccnt.GetAddress())
@@ -74,10 +74,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, contractID 
 
 	// get contact info
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetCodeKey(contractID))
-	var contractInfo types.ContractInfo
+	bz := store.Get(types.GetCodeKey(codeID))
+	var codeInfo types.CodeInfo
 	if bz != nil {
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &contractInfo)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &codeInfo)
 	}
 
 	// prepare params for contract instantiate call
@@ -93,13 +93,13 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, contractID 
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
-	_, err = k.wasmer.Instantiate(contractInfo.CodeID, params, initMsgBz, prefixStore, 100000000)
+	_, err = k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsgBz, prefixStore, 100000000)
 	if err != nil {
 		return contractAddress, types.ErrInstantiateFailed(err)
 	}
 
 	// persist instance
-	instance := types.NewInstance(contractID, creator, initMsgBz, prefixStore)
+	instance := types.NewInstance(codeID, creator, initMsgBz, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryLengthPrefixed(instance))
 
