@@ -3,7 +3,6 @@ package keeper
 import (
 	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,14 +13,17 @@ import (
 )
 
 func TestNewKeeper(t *testing.T) {
-	_, _, keeper := CreateTestInput(t, false)
+	tempDir, _ := ioutil.TempDir("wasm", "contract")
+	defer os.RemoveAll("wasm")
+	_, _, keeper := CreateTestInput(t, false, tempDir)
 	require.NotNil(t, keeper)
 }
 
 func TestCreate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "wasm"))
+	tempDir, _ := ioutil.TempDir("wasm", "contract")
+	defer os.RemoveAll("wasm")
+	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
-	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 
@@ -34,9 +36,10 @@ func TestCreate(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "wasm"))
+	tempDir, _ := ioutil.TempDir("wasm", "contract")
+	defer os.RemoveAll("wasm")
+	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
-	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 
