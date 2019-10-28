@@ -19,7 +19,7 @@ func TestNewKeeper(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "contract"))
+	os.RemoveAll(path.Join("/tmp", "wasm"))
 
 	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -34,7 +34,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "contract"))
+	os.RemoveAll(path.Join("/tmp", "wasm"))
 
 	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -53,7 +53,7 @@ func TestInstantiate(t *testing.T) {
 
 	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
 	require.NoError(t, err)
-	require.Equal(t, "cosmos1zww0vehy3dcupct84zk37q4pslupxjqc5spd65", addr.String())
+	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 }
 
 type InitMsg struct {

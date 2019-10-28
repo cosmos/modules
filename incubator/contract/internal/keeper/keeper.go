@@ -61,7 +61,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte)
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint64, initMsg interface{}, deposit sdk.Coins) (sdk.AccAddress, sdk.Error) {
 	// create contract address
-	contractAddress := addrFromUint64(codeID)
+	contractAddress := k.generateContractAddress(ctx, codeID)
 	existingAccnt := k.accountKeeper.GetAccount(ctx, contractAddress)
 	if existingAccnt != nil {
 		return nil, types.ErrAccountExists(existingAccnt.GetAddress())
@@ -131,4 +131,10 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	addr[0] = 'C'
 	binary.PutUvarint(addr[1:], id)
 	return sdk.AccAddress(crypto.AddressHash(addr))
+}
+
+func (k Keeper) generateContractAddress(ctx sdk.Context, codeID uint64) sdk.AccAddress {
+	instanceID := k.autoIncrementID(ctx, types.KeyLastInstanceID)
+	contractID := codeID<<32 + instanceID
+	return addrFromUint64(contractID)
 }
