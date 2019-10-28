@@ -46,7 +46,7 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.Accou
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte) (contractID uint64, sdkErr sdk.Error) {
 	codeID, err := k.wasmer.Create(wasmCode)
 	if err != nil {
-		return contractID, types.ErrCreateFailed(err)
+		return 0, types.ErrCreateFailed(err)
 	}
 
 	store := ctx.KVStore(k.storeKey)
