@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmwasm/modules/incubator/contract/internal/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 // Keeper will have a reference to Wasmer with it's own data directory.
@@ -129,5 +130,5 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	addr := make([]byte, 20)
 	addr[0] = 'C'
 	binary.PutUvarint(addr[1:], id)
-	return addr
+	return sdk.AccAddress(crypto.AddressHash(addr))
 }

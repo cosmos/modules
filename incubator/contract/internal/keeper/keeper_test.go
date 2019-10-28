@@ -53,7 +53,7 @@ func TestInstantiate(t *testing.T) {
 
 	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
 	require.NoError(t, err)
-	require.Equal(t, "cosmos1gvqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqlzsxy0", addr.String())
+	require.Equal(t, "cosmos1zww0vehy3dcupct84zk37q4pslupxjqc5spd65", addr.String())
 }
 
 type InitMsg struct {
