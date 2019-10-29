@@ -29,8 +29,8 @@ type Instance struct {
 	PrefixStore prefix.Store   `json:"prefix_store"`
 }
 
-// NewInstanceParams initializes params for a contract instance
-func NewInstanceParams(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAcct auth.Account) wasmTypes.Params {
+// NewParams initializes params for a contract instance
+func NewParams(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAcct auth.Account) wasmTypes.Params {
 	return wasmTypes.Params{
 		Block: wasmTypes.BlockInfo{
 			Height:  ctx.BlockHeight(),
@@ -67,5 +67,18 @@ func NewInstance(codeID uint64, creator sdk.AccAddress, initMsg []byte, prefixSt
 		Creator:     creator,
 		InitMsg:     initMsg,
 		PrefixStore: prefixStore,
+	}
+}
+
+// CosmosResult converts from a Wasm Result type
+func CosmosResult(wasmResult wasmTypes.Result) sdk.Result {
+	return sdk.Result{
+		Code:      1,
+		Codespace: DefaultCodespace,
+		Data:      []byte(wasmResult.Data),
+		Log:       wasmResult.Log,
+		GasWanted: 0,
+		GasUsed:   wasmResult.GasUsed,
+		Events:    nil,
 	}
 }

@@ -65,6 +65,37 @@ func TestInstantiate(t *testing.T) {
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 }
 
+func TestExecute(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
+
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
+	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
+
+	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	require.NoError(t, err)
+
+	contractID, err := keeper.Create(ctx, creator, wasmCode)
+	require.NoError(t, err)
+
+	initMsg := InitMsg{
+		Verifier:    "fred",
+		Beneficiary: "bob",
+	}
+	initMsgBz, err := json.Marshal(initMsg)
+	require.NoError(t, err)
+
+	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
+	require.NoError(t, err)
+	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
+
+	res, err := keeper.Execute(ctx, addr, creator, deposit, []byte(`{}`))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
 type InitMsg struct {
 	Verifier    string `json:"verifier"`
 	Beneficiary string `json:"beneficiary"`
