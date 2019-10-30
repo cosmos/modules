@@ -52,7 +52,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte)
 	codeID = k.autoIncrementID(ctx, types.KeyLastCodeID)
 	contractInfo := types.NewCodeInfo(codeHash, creator)
 	// 0x01 | codeID (uint64) -> ContractInfo
-	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshalBinaryLengthPrefixed(contractInfo))
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshalBinaryBare(contractInfo))
 
 	return codeID, nil
 }
@@ -76,7 +76,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	bz := store.Get(types.GetCodeKey(codeID))
 	var codeInfo types.CodeInfo
 	if bz != nil {
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &codeInfo)
+		k.cdc.MustUnmarshalBinaryBare(bz, &codeInfo)
 	}
 
 	// prepare params for contract instantiate call
