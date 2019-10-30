@@ -14,15 +14,17 @@ import (
 )
 
 func TestNewKeeper(t *testing.T) {
-	tempDir, _ := ioutil.TempDir("wasm", "contract")
-	defer os.RemoveAll("wasm")
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
 	_, _, keeper := CreateTestInput(t, false, tempDir)
 	require.NotNil(t, keeper)
 }
 
 func TestCreate(t *testing.T) {
-	tempDir, _ := ioutil.TempDir("wasm", "contract")
-	defer os.RemoveAll("wasm")
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
 	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -37,8 +39,9 @@ func TestCreate(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	tempDir, _ := ioutil.TempDir("wasm", "contract")
-	defer os.RemoveAll("wasm")
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
 	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
