@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,14 +14,19 @@ import (
 )
 
 func TestNewKeeper(t *testing.T) {
-	_, _, keeper := CreateTestInput(t, false)
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+	_, _, keeper := CreateTestInput(t, false, tempDir)
 	require.NotNil(t, keeper)
 }
 
 func TestCreate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "contract"))
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
-	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 
@@ -34,9 +39,11 @@ func TestCreate(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	os.RemoveAll(path.Join("/tmp", "contract"))
+	tempDir, err := ioutil.TempDir("", "wasm")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
-	ctx, accKeeper, keeper := CreateTestInput(t, false)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 
@@ -50,10 +57,12 @@ func TestInstantiate(t *testing.T) {
 		Verifier:    "fred",
 		Beneficiary: "bob",
 	}
-
-	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsg, deposit)
+	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
-	require.Equal(t, "cosmos1gvqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqlzsxy0", addr.String())
+
+	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
+	require.NoError(t, err)
+	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 }
 
 type InitMsg struct {

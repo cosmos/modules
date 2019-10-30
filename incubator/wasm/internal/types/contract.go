@@ -7,23 +7,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-// ContractInfo is data for the uploaded contract WASM code
-type ContractInfo struct {
-	CodeID  []byte         `json:"code_id"`
-	Creator sdk.AccAddress `json:"creator"`
+// CodeInfo is data for the uploaded contract WASM code
+type CodeInfo struct {
+	CodeHash []byte         `json:"code_hash"`
+	Creator  sdk.AccAddress `json:"creator"`
 }
 
-// NewContractInfo fills a new Contract struct
-func NewContractInfo(codeID []byte, creator sdk.AccAddress) ContractInfo {
-	return ContractInfo{
-		CodeID:  codeID,
-		Creator: creator,
+// NewCodeInfo fills a new Contract struct
+func NewCodeInfo(codeHash []byte, creator sdk.AccAddress) CodeInfo {
+	return CodeInfo{
+		CodeHash: codeHash,
+		Creator:  creator,
 	}
 }
 
 // Instance stores a WASM contract instance
 type Instance struct {
-	ContractID  uint64         `json:"contract_id"`
+	CodeID      uint64         `json:"code_id"`
 	Creator     sdk.AccAddress `json:"creator"`
 	InitMsg     []byte         `json:"init_msg"`
 	PrefixStore prefix.Store   `json:"prefix_store"`
@@ -61,9 +61,9 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 }
 
 // NewInstance creates a new instance of a given WASM contract
-func NewInstance(contractID uint64, creator sdk.AccAddress, initMsg []byte, prefixStore prefix.Store) Instance {
+func NewInstance(codeID uint64, creator sdk.AccAddress, initMsg []byte, prefixStore prefix.Store) Instance {
 	return Instance{
-		ContractID:  contractID,
+		CodeID:      codeID,
 		Creator:     creator,
 		InitMsg:     initMsg,
 		PrefixStore: prefixStore,

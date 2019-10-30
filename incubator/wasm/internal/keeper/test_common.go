@@ -28,7 +28,7 @@ func MakeTestCodec() *codec.Codec {
 	return cdc
 }
 
-func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKeeper, Keeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, tempDir string) (sdk.Context, auth.AccountKeeper, Keeper) {
 	keyContract := sdk.NewKVStoreKey(types.StoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
@@ -62,8 +62,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 		nil,
 	)
 
-	homeDir := "/tmp"
-	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, homeDir)
+	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, tempDir)
 
 	return ctx, accountKeeper, keeper
 }
