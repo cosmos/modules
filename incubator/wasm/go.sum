@@ -34,6 +34,8 @@ github.com/confio/go-cosmwasm v0.3.1-0.20191030044138-d4c5382c1461 h1:Xep8Vx082z
 github.com/confio/go-cosmwasm v0.3.1-0.20191030044138-d4c5382c1461/go.mod h1:pHipRby+f3cv97QPLELkzOAlNs/s87uDyhc+SnMn7L4=
 github.com/confio/go-cosmwasm v0.3.1-0.20191031070317-eccd7af8b2e0 h1:pujWjKQ4/BpyyGsx3rxT4gKglFBCzzVPWP0CQfza4E4=
 github.com/confio/go-cosmwasm v0.3.1-0.20191031070317-eccd7af8b2e0/go.mod h1:pHipRby+f3cv97QPLELkzOAlNs/s87uDyhc+SnMn7L4=
+github.com/confio/go-cosmwasm v0.3.1-0.20191031082203-e8b11ceaf2ae h1:BTYA0tPMXpkpjL/EvrlCV+2ZFQvTPvytzAzbrirfbNo=
+github.com/confio/go-cosmwasm v0.3.1-0.20191031082203-e8b11ceaf2ae/go.mod h1:pHipRby+f3cv97QPLELkzOAlNs/s87uDyhc+SnMn7L4=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible h1:jFneRYjIvLMLhDLCzuTuU4rSJUjRplcJQ7pD7MnhC04=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
