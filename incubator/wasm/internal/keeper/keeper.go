@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
@@ -84,7 +83,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
-	prefixStoreKey := types.GetInstanceStorePrefixKey(contractAddress)
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
@@ -94,7 +93,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 
 	// persist instance
-	instance := types.NewInstance(codeID, creator, initMsg, prefixStore)
+	instance := types.NewContract(codeID, creator, initMsg, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(instance))
 
@@ -105,14 +104,14 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
 	store := ctx.KVStore(k.storeKey)
 
-	var instance types.Instance
-	instanceBz := store.Get(types.GetContractAddressKey(contractAddress))
-	if instanceBz != nil {
-		k.cdc.MustUnmarshalBinaryBare(instanceBz, &instance)
+	var contract types.Contract
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz != nil {
+		k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
 	}
 
 	var codeInfo types.CodeInfo
-	contractInfoBz := store.Get(types.GetCodeKey(instance.CodeID))
+	contractInfoBz := store.Get(types.GetCodeKey(contract.CodeID))
 	if contractInfoBz != nil {
 		k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
 	}
@@ -121,12 +120,10 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	params := types.NewParams(ctx, creator, coins, contractAccount)
 
 	// TODO: calculate gas limit
-	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, instance.PrefixStore, 100000000)
+	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, contract.PrefixStore, 100000000)
 	if err != nil {
 		return sdk.Result{}, types.ErrExecuteFailed(err)
 	}
-	fmt.Println(res)
-	// spew.Dump(res)
 
 	return types.CosmosResult(*res), nil
 }
