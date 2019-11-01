@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -79,6 +81,7 @@ func TestExecute(t *testing.T) {
 	ctx, accKeeper, keeper := CreateTestInput(t, false, tempDir)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
+	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 
 	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
@@ -105,20 +108,30 @@ func TestExecute(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Unauthorized")
 
+	// ensure bob doesn't exist
+	bobAcct := accKeeper.GetAccount(ctx, bob)
+	require.Nil(t, bobAcct)
+
 	// verifier can execute, and get proper gas amount
 	start := time.Now()
 	gasBefore := ctx.GasMeter().GasConsumed()
 
-	res, err = keeper.Execute(ctx, addr, fred, deposit, []byte(`{}`))
+	res, err = keeper.Execute(ctx, addr, fred, topUp, []byte(`{}`))
 	diff := time.Now().Sub(start)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Equal(t, uint64(81488), res.GasUsed)
+	assert.Equal(t, uint64(81484), res.GasUsed)
 
 	// make sure gas is properly deducted from ctx
 	gasAfter := ctx.GasMeter().GasConsumed()
 	kvStoreGas := uint64(19744) // calculated by disabling contract gas reduction and running test
 	require.Equal(t, kvStoreGas+814, gasAfter-gasBefore)
+
+	// ensure bob now exists
+	bobAcct = accKeeper.GetAccount(ctx, bob)
+	require.NotNil(t, bobAcct)
+	balance := bobAcct.GetCoins()
+	require.Equal(t, deposit.Add(topUp), balance)
 
 	t.Logf("Duration: %v (81488 gas)\n", diff)
 }
