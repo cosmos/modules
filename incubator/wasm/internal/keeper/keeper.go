@@ -51,6 +51,7 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.Accou
 		wasmer:        *wasmer,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		router:        router,
 	}
 }
 
@@ -169,6 +170,7 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msg
 
 func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
 	// we check each type (pointers would make it easier to test if set)
+	fmt.Printf("%#v\n", msg)
 	if msg.Send.FromAddress != "" {
 		if msg.Send.FromAddress != contract.GetAddress().String() {
 			return sdk.ErrUnauthorized("contract sending from different address")
@@ -187,7 +189,7 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 		for _, coin := range msg.Send.Amount {
 			amount, ok := sdk.NewIntFromString(coin.Amount)
 			if !ok {
-				return sdk.ErrInvalidCoin()
+				return sdk.ErrInvalidCoins(coin.Amount + coin.Denom)
 			}
 			c := sdk.Coin{
 				Denom:  coin.Denom,
@@ -195,8 +197,11 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 			}
 			coins = append(coins, c)
 		}
-		sendMsg := bank.NewMsgSend(fromAddr, toAddr, coins)
-
+		sendMsg := bank.MsgSend{
+			FromAddress: fromAddr,
+			ToAddress:   toAddr,
+			Amount:      coins,
+		}
 		// TODO: extract dispatch.Msg as a function
 		h := k.router.Route(sendMsg.Type())
 		if h == nil {
