@@ -81,9 +81,11 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 
 	// deposit initial contract funds
-	contractAccount := k.accountKeeper.NewAccountWithAddress(ctx, contractAddress)
-	contractAccount.SetCoins(deposit)
-	k.accountKeeper.SetAccount(ctx, contractAccount)
+	sdkerr := k.bankKeeper.SendCoins(ctx, creator, contractAddress, deposit)
+	if sdkerr != nil {
+		return nil, sdkerr
+	}
+	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
 
 	// get contact info
 	store := ctx.KVStore(k.storeKey)
@@ -102,6 +104,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
+	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
+	// trying to encode empty arrays as [] in go is a big wish but not moving much:
+	// https://github.com/golang/go/issues/27589
+	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, gas)
 	if err != nil {
@@ -109,7 +115,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	sdkerr := k.dispatchMessages(ctx, contractAccount, res.Messages)
+	sdkerr = k.dispatchMessages(ctx, contractAccount, res.Messages)
 	if sdkerr != nil {
 		return nil, sdkerr
 	}
@@ -138,12 +144,21 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
 	}
 
+	// add more funds
+	sdkerr := k.bankKeeper.SendCoins(ctx, caller, contractAddress, coins)
+	if sdkerr != nil {
+		return sdk.Result{}, sdkerr
+	}
 	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
 	params := types.NewParams(ctx, caller, coins, contractAccount)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
+	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
+	// trying to encode empty arrays as [] in go is a big wish but not moving much:
+	// https://github.com/golang/go/issues/27589
+	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, gas)
 	if err != nil {
@@ -151,7 +166,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	sdkerr := k.dispatchMessages(ctx, contractAccount, res.Messages)
+	sdkerr = k.dispatchMessages(ctx, contractAccount, res.Messages)
 	if sdkerr != nil {
 		return sdk.Result{}, sdkerr
 	}

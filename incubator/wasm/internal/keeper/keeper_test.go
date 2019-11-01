@@ -70,7 +70,7 @@ func TestInstantiate(t *testing.T) {
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 
 	gasAfter := ctx.GasMeter().GasConsumed()
-	kvStoreGas := uint64(20588) // calculated by disabling contract gas reduction and running test
+	kvStoreGas := uint64(28755) // calculated by disabling contract gas reduction and running test
 	require.Equal(t, kvStoreGas+433, gasAfter-gasBefore)
 }
 
@@ -83,6 +83,7 @@ func TestExecute(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit))
+	fred := createFakeFundedAccount(ctx, accKeeper, topUp)
 
 	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
@@ -90,7 +91,6 @@ func TestExecute(t *testing.T) {
 	contractID, err := keeper.Create(ctx, creator, wasmCode)
 	require.NoError(t, err)
 
-	_, _, fred := keyPubAddr()
 	_, _, bob := keyPubAddr()
 	initMsg := InitMsg{
 		Verifier:    fred.String(),
@@ -102,11 +102,6 @@ func TestExecute(t *testing.T) {
 	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
-
-	// unauthorized
-	res, err := keeper.Execute(ctx, addr, creator, deposit, []byte(`{}`))
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "Unauthorized")
 
 	// ensure bob doesn't exist
 	bobAcct := accKeeper.GetAccount(ctx, bob)
@@ -123,10 +118,17 @@ func TestExecute(t *testing.T) {
 	require.NotNil(t, contractAcct)
 	assert.Equal(t, deposit, contractAcct.GetCoins())
 
+	// unauthorized - trialCtx so we don't change state
+	trialCtx := ctx.WithMultiStore(ctx.MultiStore().CacheWrap().(sdk.MultiStore))
+	res, err := keeper.Execute(trialCtx, addr, creator, deposit, []byte(`{}`))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Unauthorized")
+
 	// verifier can execute, and get proper gas amount
 	start := time.Now()
 	gasBefore := ctx.GasMeter().GasConsumed()
 
+	// TODO: rust doesn't like null array - need [] or 0
 	res, err = keeper.Execute(ctx, addr, fred, topUp, []byte(`{}`))
 	diff := time.Now().Sub(start)
 	require.NoError(t, err)
@@ -135,20 +137,14 @@ func TestExecute(t *testing.T) {
 
 	// make sure gas is properly deducted from ctx
 	gasAfter := ctx.GasMeter().GasConsumed()
-	kvStoreGas := uint64(19744) // calculated by disabling contract gas reduction and running test
+	kvStoreGas := uint64(30318) // calculated by disabling contract gas reduction and running test
 	require.Equal(t, kvStoreGas+814, gasAfter-gasBefore)
 
-	// ensure bob now exists
+	// ensure bob now exists and got both payments released
 	bobAcct = accKeeper.GetAccount(ctx, bob)
 	require.NotNil(t, bobAcct)
 	balance := bobAcct.GetCoins()
 	assert.Equal(t, deposit.Add(topUp), balance)
-
-	// ensure funder has reduced balance (further)
-	creatorAcct = accKeeper.GetAccount(ctx, creator)
-	require.NotNil(t, creatorAcct)
-	// we started at 2*deposit, should have spent deposit + topUp
-	assert.Equal(t, deposit.Add(topUp), creatorAcct.GetCoins())
 
 	// ensure contract has updated balance
 	contractAcct = accKeeper.GetAccount(ctx, addr)
