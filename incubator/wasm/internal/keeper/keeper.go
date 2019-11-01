@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
+	wasmTypes "github.com/confio/go-cosmwasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,6 +104,11 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 	consumeGas(ctx, res.GasUsed)
 
+	sdkerr := k.dispatchMessages(ctx, res.Messages)
+	if sdkerr != nil {
+		return nil, sdkerr
+	}
+
 	// persist instance
 	instance := types.NewContract(codeID, creator, initMsg, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
@@ -140,10 +146,25 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	// TODO: this needs to dispatch all the messages returned from the Execute function
-	// this is how we can send the tokens out of the contract
+	sdkerr := k.dispatchMessages(ctx, res.Messages)
+	if sdkerr != nil {
+		return sdk.Result{}, sdkerr
+	}
 
 	return types.CosmosResult(*res), nil
+}
+
+func (k Keeper) dispatchMessages(ctx sdk.Context, msgs []wasmTypes.CosmosMsg) sdk.Error {
+	for _, msg := range msgs {
+		if err := k.dispatchMessage(ctx, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) dispatchMessage(ctx sdk.Context, msgs wasmTypes.CosmosMsg) sdk.Error {
+	return nil
 }
 
 func gasForContract(ctx sdk.Context) uint64 {
