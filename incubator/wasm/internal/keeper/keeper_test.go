@@ -82,7 +82,7 @@ func TestExecute(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
+	creator := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit))
 
 	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
@@ -112,6 +112,17 @@ func TestExecute(t *testing.T) {
 	bobAcct := accKeeper.GetAccount(ctx, bob)
 	require.Nil(t, bobAcct)
 
+	// ensure funder has reduced balance
+	creatorAcct := accKeeper.GetAccount(ctx, creator)
+	require.NotNil(t, creatorAcct)
+	// we started at 2*deposit, should have spent one above
+	assert.Equal(t, deposit, creatorAcct.GetCoins())
+
+	// ensure contract has updated balance
+	contractAcct := accKeeper.GetAccount(ctx, addr)
+	require.NotNil(t, contractAcct)
+	assert.Equal(t, deposit, contractAcct.GetCoins())
+
 	// verifier can execute, and get proper gas amount
 	start := time.Now()
 	gasBefore := ctx.GasMeter().GasConsumed()
@@ -131,7 +142,18 @@ func TestExecute(t *testing.T) {
 	bobAcct = accKeeper.GetAccount(ctx, bob)
 	require.NotNil(t, bobAcct)
 	balance := bobAcct.GetCoins()
-	require.Equal(t, deposit.Add(topUp), balance)
+	assert.Equal(t, deposit.Add(topUp), balance)
+
+	// ensure funder has reduced balance (further)
+	creatorAcct = accKeeper.GetAccount(ctx, creator)
+	require.NotNil(t, creatorAcct)
+	// we started at 2*deposit, should have spent deposit + topUp
+	assert.Equal(t, deposit.Add(topUp), creatorAcct.GetCoins())
+
+	// ensure contract has updated balance
+	contractAcct = accKeeper.GetAccount(ctx, addr)
+	require.NotNil(t, contractAcct)
+	assert.Equal(t, sdk.Coins(nil), contractAcct.GetCoins())
 
 	t.Logf("Duration: %v (81488 gas)\n", diff)
 }
