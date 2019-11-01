@@ -15,6 +15,15 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
+// GasMultiplier is how many cosmwasm gas points = 1 sdk gas point
+// SDK reference costs can be found here: https://github.com/cosmos/cosmos-sdk/blob/02c6c9fafd58da88550ab4d7d494724a477c8a68/store/types/gas.go#L153-L164
+// A write at ~3000 gas and ~200us = 10 gas per us (microsecond) cpu/io
+// Rough timing have 88k gas at 100us, which is equal to 1k sdk gas... (one read)
+const GasMultiplier = 88
+
+// MaxGas for a contract is 900 million (enforced in rust)
+const MaxGas = 900_000_000
+
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
 	storeKey      sdk.StoreKey
@@ -88,10 +97,12 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
-	_, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, 100000000)
+	gas := gasForContract(ctx)
+	res, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, gas)
 	if err != nil {
 		return contractAddress, types.ErrInstantiateFailed(err)
 	}
+	consumeGas(ctx, res.GasUsed)
 
 	// persist instance
 	instance := types.NewContract(codeID, creator, initMsg, prefixStore)
@@ -122,18 +133,34 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	fmt.Printf("Execute %X: %v\n", codeInfo.CodeHash, contract.PrefixStore)
 
-	// TODO: calculate gas limit before call
-	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, 100000000)
+	gas := gasForContract(ctx)
+	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, gas)
 	if err != nil {
 		return sdk.Result{}, types.ErrExecuteFailed(err)
 	}
+	consumeGas(ctx, res.GasUsed)
 
 	// TODO: this needs to dispatch all the messages returned from the Execute function
 	// this is how we can send the tokens out of the contract
 
 	return types.CosmosResult(*res), nil
+}
+
+func gasForContract(ctx sdk.Context) uint64 {
+	meter := ctx.GasMeter()
+	remaining := (meter.Limit() - meter.GasConsumed()) * GasMultiplier
+	fmt.Printf("start: %d\n", remaining)
+	if remaining > MaxGas {
+		return MaxGas
+	}
+	return remaining
+}
+
+func consumeGas(ctx sdk.Context, gas uint64) {
+	fmt.Printf("used: %d\n", gas)
+	consumed := gas / GasMultiplier
+	ctx.GasMeter().ConsumeGas(consumed, "wasm contract")
 }
 
 // generates a contract address from codeID + instanceID

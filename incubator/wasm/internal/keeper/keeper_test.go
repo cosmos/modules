@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -99,10 +100,15 @@ func TestExecute(t *testing.T) {
 	require.Contains(t, err.Error(), "Unauthorized")
 
 	// verifier can execute, and get proper gas amount
+	start := time.Now()
+
 	res, err = keeper.Execute(ctx, addr, fred, deposit, []byte(`{}`))
+	diff := time.Now().Sub(start)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, uint64(81488), res.GasUsed)
+
+	t.Logf("Duration: %v (81488 gas)\n", diff)
 }
 
 type InitMsg struct {

@@ -14,6 +14,7 @@ const (
 	CodeAccountExists     sdk.CodeType = 2
 	CodeInstantiateFailed sdk.CodeType = 3
 	CodeExecuteFailed     sdk.CodeType = 4
+	CodeGasLimit          sdk.CodeType = 5
 )
 
 // ErrCreateFailed error for wasm code that has already been uploaded or failed
@@ -31,7 +32,12 @@ func ErrInstantiateFailed(err error) sdk.Error {
 	return sdk.NewError(DefaultCodespace, CodeInstantiateFailed, fmt.Sprintf("instantiate wasm contract failed: %s", err.Error()))
 }
 
-// ErrExecuteFailed error for rust instantiate contract failure
+// ErrExecuteFailed error for rust execution contract failure
 func ErrExecuteFailed(err error) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInstantiateFailed, fmt.Sprintf("execute wasm contract failed: %s", err.Error()))
+	return sdk.NewError(DefaultCodespace, CodeExecuteFailed, fmt.Sprintf("execute wasm contract failed: %s", err.Error()))
+}
+
+// ErrGasLimit error for out of gas
+func ErrGasLimit(msg string) sdk.Error {
+	return sdk.NewError(DefaultCodespace, CodeGasLimit, fmt.Sprintf("insufficient gas: %s", msg))
 }
