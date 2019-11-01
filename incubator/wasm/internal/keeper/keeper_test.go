@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -60,9 +61,15 @@ func TestInstantiate(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
+	gasBefore := ctx.GasMeter().GasConsumed()
+
 	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
+
+	gasAfter := ctx.GasMeter().GasConsumed()
+	kvStoreGas := uint64(20588) // calculated by disabling contract gas reduction and running test
+	require.Equal(t, kvStoreGas+433, gasAfter-gasBefore)
 }
 
 func TestExecute(t *testing.T) {
@@ -99,10 +106,21 @@ func TestExecute(t *testing.T) {
 	require.Contains(t, err.Error(), "Unauthorized")
 
 	// verifier can execute, and get proper gas amount
+	start := time.Now()
+	gasBefore := ctx.GasMeter().GasConsumed()
+
 	res, err = keeper.Execute(ctx, addr, fred, deposit, []byte(`{}`))
+	diff := time.Now().Sub(start)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, uint64(81488), res.GasUsed)
+
+	// make sure gas is properly deducted from ctx
+	gasAfter := ctx.GasMeter().GasConsumed()
+	kvStoreGas := uint64(5278) // calculated by disabling contract gas reduction and running test
+	require.Equal(t, kvStoreGas+814, gasAfter-gasBefore)
+
+	t.Logf("Duration: %v (81488 gas)\n", diff)
 }
 
 type InitMsg struct {
