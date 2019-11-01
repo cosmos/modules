@@ -170,7 +170,6 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msg
 
 func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
 	// we check each type (pointers would make it easier to test if set)
-	fmt.Printf("%#v\n", msg)
 	if msg.Send.FromAddress != "" {
 		if msg.Send.FromAddress != contract.GetAddress().String() {
 			return sdk.ErrUnauthorized("contract sending from different address")
@@ -203,9 +202,8 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 			Amount:      coins,
 		}
 		// TODO: extract dispatch.Msg as a function
-		h := k.router.Route(sendMsg.Type())
+		h := k.router.Route(bank.RouterKey)
 		if h == nil {
-			// TODO:
 			panic("sendMsg handler not registered")
 		}
 		res := h(ctx, sendMsg)

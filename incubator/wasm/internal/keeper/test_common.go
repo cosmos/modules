@@ -62,9 +62,12 @@ func CreateTestInput(t *testing.T, isCheckTx bool, tempDir string) (sdk.Context,
 		bank.DefaultCodespace,
 		nil,
 	)
+	bk.SetSendEnabled(ctx, true)
 
+	// TODO: register more than bank.send
 	router := baseapp.NewRouter()
-	// TODO: register bank.Send (and more?)
+	h := bank.NewHandler(bk)
+	router.AddRoute(bank.RouterKey, h)
 
 	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, router, tempDir)
 

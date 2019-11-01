@@ -117,7 +117,7 @@ func TestExecute(t *testing.T) {
 
 	// make sure gas is properly deducted from ctx
 	gasAfter := ctx.GasMeter().GasConsumed()
-	kvStoreGas := uint64(5278) // calculated by disabling contract gas reduction and running test
+	kvStoreGas := uint64(19744) // calculated by disabling contract gas reduction and running test
 	require.Equal(t, kvStoreGas+814, gasAfter-gasBefore)
 
 	t.Logf("Duration: %v (81488 gas)\n", diff)
