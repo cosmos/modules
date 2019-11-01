@@ -13,6 +13,7 @@ const (
 	CodeCreatedFailed     sdk.CodeType = 1
 	CodeAccountExists     sdk.CodeType = 2
 	CodeInstantiateFailed sdk.CodeType = 3
+	CodeExecuteFailed     sdk.CodeType = 4
 )
 
 // ErrCreateFailed error for wasm code that has already been uploaded or failed
@@ -28,4 +29,9 @@ func ErrAccountExists(addr sdk.AccAddress) sdk.Error {
 // ErrInstantiateFailed error for rust instantiate contract failure
 func ErrInstantiateFailed(err error) sdk.Error {
 	return sdk.NewError(DefaultCodespace, CodeInstantiateFailed, fmt.Sprintf("instantiate wasm contract failed: %s", err.Error()))
+}
+
+// ErrExecuteFailed error for rust instantiate contract failure
+func ErrExecuteFailed(err error) sdk.Error {
+	return sdk.NewError(DefaultCodespace, CodeInstantiateFailed, fmt.Sprintf("execute wasm contract failed: %s", err.Error()))
 }

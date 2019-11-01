@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
-	wasmTypes "github.com/confio/go-cosmwasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,11 +80,11 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 
 	// prepare params for contract instantiate call
-	params := types.NewInstanceParams(ctx, creator, deposit, contractAccount)
+	params := types.NewParams(ctx, creator, deposit, contractAccount)
 
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
-	prefixStoreKey := types.GetInstanceStorePrefixKey(contractAddress)
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
@@ -94,19 +94,46 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 
 	// persist instance
-	instance := types.NewInstance(codeID, creator, initMsg, prefixStore)
+	instance := types.NewContract(codeID, creator, initMsg, prefixStore)
 	// 0x02 | contractAddress (sdk.AccAddress) -> Instance
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(instance))
 
 	return contractAddress, nil
 }
 
-// Execute executes the contract instance (STUB)
-func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, params wasmTypes.Params, msgs interface{}) sdk.Result {
-	// get contractID, store from contractAddress
-	// get codeID from contractID
-	// res, err := k.wasmer.Execute(codeID, params, msgs, store, gasLimit)
-	return sdk.Result{}
+// Execute executes the contract instance
+func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
+	store := ctx.KVStore(k.storeKey)
+
+	var contract types.Contract
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz != nil {
+		k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+	}
+
+	var codeInfo types.CodeInfo
+	contractInfoBz := store.Get(types.GetCodeKey(contract.CodeID))
+	if contractInfoBz != nil {
+		k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
+	}
+
+	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
+	params := types.NewParams(ctx, creator, coins, contractAccount)
+
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	fmt.Printf("Execute %X: %v\n", codeInfo.CodeHash, contract.PrefixStore)
+
+	// TODO: calculate gas limit before call
+	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, 100000000)
+	if err != nil {
+		return sdk.Result{}, types.ErrExecuteFailed(err)
+	}
+
+	// TODO: this needs to dispatch all the messages returned from the Execute function
+	// this is how we can send the tokens out of the contract
+
+	return types.CosmosResult(*res), nil
 }
 
 // generates a contract address from codeID + instanceID

@@ -21,16 +21,16 @@ func NewCodeInfo(codeHash []byte, creator sdk.AccAddress) CodeInfo {
 	}
 }
 
-// Instance stores a WASM contract instance
-type Instance struct {
+// Contract stores a WASM contract instance
+type Contract struct {
 	CodeID      uint64         `json:"code_id"`
 	Creator     sdk.AccAddress `json:"creator"`
 	InitMsg     []byte         `json:"init_msg"`
 	PrefixStore prefix.Store   `json:"prefix_store"`
 }
 
-// NewInstanceParams initializes params for a contract instance
-func NewInstanceParams(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAcct auth.Account) wasmTypes.Params {
+// NewParams initializes params for a contract instance
+func NewParams(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAcct auth.Account) wasmTypes.Params {
 	return wasmTypes.Params{
 		Block: wasmTypes.BlockInfo{
 			Height:  ctx.BlockHeight(),
@@ -60,12 +60,25 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 	return wasmCoins
 }
 
-// NewInstance creates a new instance of a given WASM contract
-func NewInstance(codeID uint64, creator sdk.AccAddress, initMsg []byte, prefixStore prefix.Store) Instance {
-	return Instance{
+// NewContract creates a new instance of a given WASM contract
+func NewContract(codeID uint64, creator sdk.AccAddress, initMsg []byte, prefixStore prefix.Store) Contract {
+	return Contract{
 		CodeID:      codeID,
 		Creator:     creator,
 		InitMsg:     initMsg,
 		PrefixStore: prefixStore,
+	}
+}
+
+// CosmosResult converts from a Wasm Result type
+func CosmosResult(wasmResult wasmTypes.Result) sdk.Result {
+	return sdk.Result{
+		Code:      1,
+		Codespace: DefaultCodespace,
+		Data:      []byte(wasmResult.Data),
+		Log:       wasmResult.Log,
+		GasWanted: 0,
+		GasUsed:   wasmResult.GasUsed,
+		Events:    nil,
 	}
 }
