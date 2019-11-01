@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
@@ -119,8 +120,12 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
 	params := types.NewParams(ctx, creator, coins, contractAccount)
 
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	fmt.Printf("Execute %X: %v\n", codeInfo.CodeHash, contract.PrefixStore)
+
 	// TODO: calculate gas limit
-	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, contract.PrefixStore, 100000000)
+	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, 100000000)
 	if err != nil {
 		return sdk.Result{}, types.ErrExecuteFailed(err)
 	}
