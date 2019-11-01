@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,8 +62,14 @@ func CreateTestInput(t *testing.T, isCheckTx bool, tempDir string) (sdk.Context,
 		bank.DefaultCodespace,
 		nil,
 	)
+	bk.SetSendEnabled(ctx, true)
 
-	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, tempDir)
+	// TODO: register more than bank.send
+	router := baseapp.NewRouter()
+	h := bank.NewHandler(bk)
+	router.AddRoute(bank.RouterKey, h)
+
+	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, router, tempDir)
 
 	return ctx, accountKeeper, keeper
 }

@@ -2,13 +2,16 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
+	wasmTypes "github.com/confio/go-cosmwasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmwasm/modules/incubator/contract/internal/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -30,11 +33,13 @@ type Keeper struct {
 	accountKeeper auth.AccountKeeper
 	bankKeeper    bank.Keeper
 
+	router sdk.Router
+
 	wasmer wasm.Wasmer
 }
 
 // NewKeeper creates a new contract Keeper instance
-func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper, homeDir string) Keeper {
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper, router sdk.Router, homeDir string) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), 3)
 	if err != nil {
 		panic(err)
@@ -46,6 +51,7 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.Accou
 		wasmer:        *wasmer,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		router:        router,
 	}
 }
 
@@ -75,9 +81,11 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 
 	// deposit initial contract funds
-	contractAccount := k.accountKeeper.NewAccountWithAddress(ctx, contractAddress)
-	contractAccount.SetCoins(deposit)
-	k.accountKeeper.SetAccount(ctx, contractAccount)
+	sdkerr := k.bankKeeper.SendCoins(ctx, creator, contractAddress, deposit)
+	if sdkerr != nil {
+		return nil, sdkerr
+	}
+	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
 
 	// get contact info
 	store := ctx.KVStore(k.storeKey)
@@ -96,12 +104,21 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
+	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
+	// trying to encode empty arrays as [] in go is a big wish but not moving much:
+	// https://github.com/golang/go/issues/27589
+	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, gas)
 	if err != nil {
 		return contractAddress, types.ErrInstantiateFailed(err)
 	}
 	consumeGas(ctx, res.GasUsed)
+
+	sdkerr = k.dispatchMessages(ctx, contractAccount, res.Messages)
+	if sdkerr != nil {
+		return nil, sdkerr
+	}
 
 	// persist instance
 	instance := types.NewContract(codeID, creator, initMsg, prefixStore)
@@ -112,7 +129,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 }
 
 // Execute executes the contract instance
-func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
+func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
 	store := ctx.KVStore(k.storeKey)
 
 	var contract types.Contract
@@ -127,12 +144,21 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 		k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
 	}
 
+	// add more funds
+	sdkerr := k.bankKeeper.SendCoins(ctx, caller, contractAddress, coins)
+	if sdkerr != nil {
+		return sdk.Result{}, sdkerr
+	}
 	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
-	params := types.NewParams(ctx, creator, coins, contractAccount)
+	params := types.NewParams(ctx, caller, coins, contractAccount)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
+	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
+	// trying to encode empty arrays as [] in go is a big wish but not moving much:
+	// https://github.com/golang/go/issues/27589
+	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, gas)
 	if err != nil {
@@ -140,10 +166,97 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	// TODO: this needs to dispatch all the messages returned from the Execute function
-	// this is how we can send the tokens out of the contract
+	sdkerr = k.dispatchMessages(ctx, contractAccount, res.Messages)
+	if sdkerr != nil {
+		return sdk.Result{}, sdkerr
+	}
 
 	return types.CosmosResult(*res), nil
+}
+
+func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msgs []wasmTypes.CosmosMsg) sdk.Error {
+	for _, msg := range msgs {
+		if err := k.dispatchMessage(ctx, contract, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
+	// we check each type (pointers would make it easier to test if set)
+	if msg.Send.FromAddress != "" {
+		sendMsg, err := convertCosmosSendMsg(msg.Send)
+		if err != nil {
+			return err
+		}
+		return k.handleSdkMessage(ctx, contract, sendMsg)
+	} else if msg.Contract.ContractAddr != "" {
+		targetAddr, stderr := sdk.AccAddressFromBech32(msg.Contract.ContractAddr)
+		if stderr != nil {
+			return sdk.ErrInvalidAddress(msg.Contract.ContractAddr)
+		}
+		_, err := k.Execute(ctx, targetAddr, contract.GetAddress(), nil, []byte(msg.Contract.Msg))
+		if err != nil {
+			return err
+		}
+	} else if msg.Opaque.Data != "" {
+		// TODO: handle opaque
+		panic("dispatch opaque message not yet implemented")
+	}
+	// what is it?
+	panic(fmt.Sprintf("Unknown CosmosMsg: %#v", msg))
+}
+
+func convertCosmosSendMsg(msg wasmTypes.SendMsg) (bank.MsgSend, sdk.Error) {
+	fromAddr, stderr := sdk.AccAddressFromBech32(msg.FromAddress)
+	if stderr != nil {
+		return bank.MsgSend{}, sdk.ErrInvalidAddress(msg.FromAddress)
+	}
+	toAddr, stderr := sdk.AccAddressFromBech32(msg.ToAddress)
+	if stderr != nil {
+		return bank.MsgSend{}, sdk.ErrInvalidAddress(msg.ToAddress)
+	}
+
+	var coins sdk.Coins
+	for _, coin := range msg.Amount {
+		amount, ok := sdk.NewIntFromString(coin.Amount)
+		if !ok {
+			return bank.MsgSend{}, sdk.ErrInvalidCoins(coin.Amount + coin.Denom)
+		}
+		c := sdk.Coin{
+			Denom:  coin.Denom,
+			Amount: amount,
+		}
+		coins = append(coins, c)
+	}
+	sendMsg := bank.MsgSend{
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
+		Amount:      coins,
+	}
+	return sendMsg, nil
+}
+
+func (k Keeper) handleSdkMessage(ctx sdk.Context, contract exported.Account, msg sdk.Msg) sdk.Error {
+	// make sure this account can send it
+	contractAddr := contract.GetAddress()
+	for _, acct := range msg.GetSigners() {
+		if !acct.Equals(contractAddr) {
+			return sdk.ErrUnauthorized("contract doesn't have permission")
+		}
+	}
+
+	// find the handler and execute it
+	h := k.router.Route(msg.Route())
+	if h == nil {
+		return sdk.ErrUnknownRequest(msg.Route())
+	}
+	res := h(ctx, msg)
+	if !res.IsOK() {
+		return sdk.NewError(res.Codespace, res.Code, res.Log)
+	}
+	return nil
 }
 
 func gasForContract(ctx sdk.Context) uint64 {
