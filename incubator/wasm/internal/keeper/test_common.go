@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,7 +63,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool, tempDir string) (sdk.Context,
 		nil,
 	)
 
-	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, tempDir)
+	router := baseapp.NewRouter()
+	// TODO: register bank.Send (and more?)
+
+	keeper := NewKeeper(cdc, keyContract, accountKeeper, bk, router, tempDir)
 
 	return ctx, accountKeeper, keeper
 }

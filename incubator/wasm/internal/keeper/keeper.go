@@ -33,11 +33,13 @@ type Keeper struct {
 	accountKeeper auth.AccountKeeper
 	bankKeeper    bank.Keeper
 
+	router sdk.Router
+
 	wasmer wasm.Wasmer
 }
 
 // NewKeeper creates a new contract Keeper instance
-func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper, homeDir string) Keeper {
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, accountKeeper auth.AccountKeeper, bankKeeper bank.Keeper, router sdk.Router, homeDir string) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), 3)
 	if err != nil {
 		panic(err)
@@ -120,7 +122,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 }
 
 // Execute executes the contract instance
-func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
+func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, coins sdk.Coins, msgs []byte) (sdk.Result, sdk.Error) {
 	store := ctx.KVStore(k.storeKey)
 
 	var contract types.Contract
@@ -136,7 +138,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	}
 
 	contractAccount := k.accountKeeper.GetAccount(ctx, contractAddress)
-	params := types.NewParams(ctx, creator, coins, contractAccount)
+	params := types.NewParams(ctx, caller, coins, contractAccount)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
@@ -168,17 +170,26 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msg
 func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
 	// we check each type (pointers would make it easier to test if set)
 	if msg.Send.FromAddress != "" {
-		// TODO: handle send
+		if msg.Send.FromAddress != contract.GetAddress().String() {
+			return sdk.ErrUnauthorized("contract sending from different address")
+		}
+		// send :=
 		return nil
 	} else if msg.Contract.ContractAddr != "" {
-		// TODO: handle contract
-		return nil
+		targetAddr, stderr := sdk.AccAddressFromBech32(msg.Contract.ContractAddr)
+		if stderr != nil {
+			return sdk.ErrInvalidAddress(msg.Contract.ContractAddr)
+		}
+		_, err := k.Execute(ctx, targetAddr, contract.GetAddress(), nil, []byte(msg.Contract.Msg))
+		if err != nil {
+			return err
+		}
 	} else if msg.Opaque.Data != "" {
 		// TODO: handle opaque
-		return nil
-	} else {
-		panic(fmt.Sprintf("Unknown CosmosMsg: %#v", msg))
+		panic("dispatch opaque message not yet implemented")
 	}
+	// what is it?
+	panic(fmt.Sprintf("Unknown CosmosMsg: %#v", msg))
 }
 
 func gasForContract(ctx sdk.Context) uint64 {
