@@ -171,46 +171,11 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msg
 func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
 	// we check each type (pointers would make it easier to test if set)
 	if msg.Send.FromAddress != "" {
-		if msg.Send.FromAddress != contract.GetAddress().String() {
-			return sdk.ErrUnauthorized("contract sending from different address")
+		sendMsg, err := convertCosmosSendMsg(msg.Send)
+		if err != nil {
+			return err
 		}
-		// TODO: extract buildSendMsg as a function
-		fromAddr, stderr := sdk.AccAddressFromBech32(msg.Send.FromAddress)
-		if stderr != nil {
-			return sdk.ErrInvalidAddress(msg.Send.FromAddress)
-		}
-		toAddr, stderr := sdk.AccAddressFromBech32(msg.Send.ToAddress)
-		if stderr != nil {
-			return sdk.ErrInvalidAddress(msg.Send.ToAddress)
-		}
-
-		var coins sdk.Coins
-		for _, coin := range msg.Send.Amount {
-			amount, ok := sdk.NewIntFromString(coin.Amount)
-			if !ok {
-				return sdk.ErrInvalidCoins(coin.Amount + coin.Denom)
-			}
-			c := sdk.Coin{
-				Denom:  coin.Denom,
-				Amount: amount,
-			}
-			coins = append(coins, c)
-		}
-		sendMsg := bank.MsgSend{
-			FromAddress: fromAddr,
-			ToAddress:   toAddr,
-			Amount:      coins,
-		}
-		// TODO: extract dispatch.Msg as a function
-		h := k.router.Route(bank.RouterKey)
-		if h == nil {
-			panic("sendMsg handler not registered")
-		}
-		res := h(ctx, sendMsg)
-		if !res.IsOK() {
-			return sdk.NewError(res.Codespace, res.Code, res.Log)
-		}
-		return nil
+		return k.handleSdkMessage(ctx, contract, sendMsg)
 	} else if msg.Contract.ContractAddr != "" {
 		targetAddr, stderr := sdk.AccAddressFromBech32(msg.Contract.ContractAddr)
 		if stderr != nil {
@@ -226,6 +191,57 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 	}
 	// what is it?
 	panic(fmt.Sprintf("Unknown CosmosMsg: %#v", msg))
+}
+
+func convertCosmosSendMsg(msg wasmTypes.SendMsg) (bank.MsgSend, sdk.Error) {
+	fromAddr, stderr := sdk.AccAddressFromBech32(msg.FromAddress)
+	if stderr != nil {
+		return bank.MsgSend{}, sdk.ErrInvalidAddress(msg.FromAddress)
+	}
+	toAddr, stderr := sdk.AccAddressFromBech32(msg.ToAddress)
+	if stderr != nil {
+		return bank.MsgSend{}, sdk.ErrInvalidAddress(msg.ToAddress)
+	}
+
+	var coins sdk.Coins
+	for _, coin := range msg.Amount {
+		amount, ok := sdk.NewIntFromString(coin.Amount)
+		if !ok {
+			return bank.MsgSend{}, sdk.ErrInvalidCoins(coin.Amount + coin.Denom)
+		}
+		c := sdk.Coin{
+			Denom:  coin.Denom,
+			Amount: amount,
+		}
+		coins = append(coins, c)
+	}
+	sendMsg := bank.MsgSend{
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
+		Amount:      coins,
+	}
+	return sendMsg, nil
+}
+
+func (k Keeper) handleSdkMessage(ctx sdk.Context, contract exported.Account, msg sdk.Msg) sdk.Error {
+	// make sure this account can send it
+	contractAddr := contract.GetAddress()
+	for _, acct := range msg.GetSigners() {
+		if !acct.Equals(contractAddr) {
+			return sdk.ErrUnauthorized("contract doesn't have permission")
+		}
+	}
+
+	// find the handler and execute it
+	h := k.router.Route(msg.Route())
+	if h == nil {
+		return sdk.ErrUnknownRequest(msg.Route())
+	}
+	res := h(ctx, msg)
+	if !res.IsOK() {
+		return sdk.NewError(res.Codespace, res.Code, res.Log)
+	}
+	return nil
 }
 
 func gasForContract(ctx sdk.Context) uint64 {
