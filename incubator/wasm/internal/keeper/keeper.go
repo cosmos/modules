@@ -173,7 +173,40 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 		if msg.Send.FromAddress != contract.GetAddress().String() {
 			return sdk.ErrUnauthorized("contract sending from different address")
 		}
-		// send :=
+		// TODO: extract buildSendMsg as a function
+		fromAddr, stderr := sdk.AccAddressFromBech32(msg.Send.FromAddress)
+		if stderr != nil {
+			return sdk.ErrInvalidAddress(msg.Send.FromAddress)
+		}
+		toAddr, stderr := sdk.AccAddressFromBech32(msg.Send.ToAddress)
+		if stderr != nil {
+			return sdk.ErrInvalidAddress(msg.Send.ToAddress)
+		}
+
+		var coins sdk.Coins
+		for _, coin := range msg.Send.Amount {
+			amount, ok := sdk.NewIntFromString(coin.Amount)
+			if !ok {
+				return sdk.ErrInvalidCoin()
+			}
+			c := sdk.Coin{
+				Denom:  coin.Denom,
+				Amount: amount,
+			}
+			coins = append(coins, c)
+		}
+		sendMsg := bank.NewMsgSend(fromAddr, toAddr, coins)
+
+		// TODO: extract dispatch.Msg as a function
+		h := k.router.Route(sendMsg.Type())
+		if h == nil {
+			// TODO:
+			panic("sendMsg handler not registered")
+		}
+		res := h(ctx, sendMsg)
+		if !res.IsOK() {
+			return sdk.NewError(res.Codespace, res.Code, res.Log)
+		}
 		return nil
 	} else if msg.Contract.ContractAddr != "" {
 		targetAddr, stderr := sdk.AccAddressFromBech32(msg.Contract.ContractAddr)
