@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
 
 	wasm "github.com/confio/go-cosmwasm"
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmwasm/modules/incubator/contract/internal/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -104,7 +106,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	sdkerr := k.dispatchMessages(ctx, res.Messages)
+	sdkerr := k.dispatchMessages(ctx, contractAccount, res.Messages)
 	if sdkerr != nil {
 		return nil, sdkerr
 	}
@@ -146,7 +148,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	}
 	consumeGas(ctx, res.GasUsed)
 
-	sdkerr := k.dispatchMessages(ctx, res.Messages)
+	sdkerr := k.dispatchMessages(ctx, contractAccount, res.Messages)
 	if sdkerr != nil {
 		return sdk.Result{}, sdkerr
 	}
@@ -154,17 +156,29 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	return types.CosmosResult(*res), nil
 }
 
-func (k Keeper) dispatchMessages(ctx sdk.Context, msgs []wasmTypes.CosmosMsg) sdk.Error {
+func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msgs []wasmTypes.CosmosMsg) sdk.Error {
 	for _, msg := range msgs {
-		if err := k.dispatchMessage(ctx, msg); err != nil {
+		if err := k.dispatchMessage(ctx, contract, msg); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (k Keeper) dispatchMessage(ctx sdk.Context, msgs wasmTypes.CosmosMsg) sdk.Error {
-	return nil
+func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg wasmTypes.CosmosMsg) sdk.Error {
+	// we check each type (pointers would make it easier to test if set)
+	if msg.Send.FromAddress != "" {
+		// TODO: handle send
+		return nil
+	} else if msg.Contract.ContractAddr != "" {
+		// TODO: handle contract
+		return nil
+	} else if msg.Opaque.Data != "" {
+		// TODO: handle opaque
+		return nil
+	} else {
+		panic(fmt.Sprintf("Unknown CosmosMsg: %#v", msg))
+	}
 }
 
 func gasForContract(ctx sdk.Context) uint64 {
