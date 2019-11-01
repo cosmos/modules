@@ -80,9 +80,11 @@ func TestExecute(t *testing.T) {
 	contractID, err := keeper.Create(ctx, creator, wasmCode)
 	require.NoError(t, err)
 
+	_, _, fred := keyPubAddr()
+	_, _, bob := keyPubAddr()
 	initMsg := InitMsg{
-		Verifier:    "fred",
-		Beneficiary: "bob",
+		Verifier:    fred.String(),
+		Beneficiary: bob.String(),
 	}
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
@@ -91,9 +93,16 @@ func TestExecute(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 
+	// unauthorized
 	res, err := keeper.Execute(ctx, addr, creator, deposit, []byte(`{}`))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Unauthorized")
+
+	// verifier can execute, and get proper gas amount
+	res, err = keeper.Execute(ctx, addr, fred, deposit, []byte(`{}`))
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	require.Equal(t, uint64(81488), res.GasUsed)
 }
 
 type InitMsg struct {

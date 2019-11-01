@@ -124,11 +124,14 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, creator
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	fmt.Printf("Execute %X: %v\n", codeInfo.CodeHash, contract.PrefixStore)
 
-	// TODO: calculate gas limit
+	// TODO: calculate gas limit before call
 	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, 100000000)
 	if err != nil {
 		return sdk.Result{}, types.ErrExecuteFailed(err)
 	}
+
+	// TODO: this needs to dispatch all the messages returned from the Execute function
+	// this is how we can send the tokens out of the contract
 
 	return types.CosmosResult(*res), nil
 }
