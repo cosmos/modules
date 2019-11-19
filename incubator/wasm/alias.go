@@ -32,6 +32,7 @@ var (
 	NewKeeper                 = keeper.NewKeeper
 	MakeTestCodec             = keeper.MakeTestCodec
 	CreateTestInput           = keeper.CreateTestInput
+	RegisterCodec             = types.RegisterCodec
 	ErrCreateFailed           = types.ErrCreateFailed
 	ErrAccountExists          = types.ErrAccountExists
 	ErrInstantiateFailed      = types.ErrInstantiateFailed
@@ -47,6 +48,7 @@ var (
 	CosmosResult              = types.CosmosResult
 
 	// variable aliases
+	ModuleCdc           = types.ModuleCdc
 	KeyLastCodeID       = types.KeyLastCodeID
 	KeyLastInstanceID   = types.KeyLastInstanceID
 	CodeKeyPrefix       = types.CodeKeyPrefix
