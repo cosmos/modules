@@ -65,13 +65,14 @@ func TestInstantiate(t *testing.T) {
 
 	gasBefore := ctx.GasMeter().GasConsumed()
 
-	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, deposit)
+	// create with no balance is also legal
+	addr, err := keeper.Instantiate(ctx, creator, contractID, initMsgBz, nil)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 
 	gasAfter := ctx.GasMeter().GasConsumed()
 	kvStoreGas := uint64(28757) // calculated by disabling contract gas reduction and running test
-	require.Equal(t, kvStoreGas+433, gasAfter-gasBefore)
+	require.Equal(t, kvStoreGas+286, gasAfter-gasBefore)
 }
 
 func TestExecute(t *testing.T) {
@@ -120,7 +121,7 @@ func TestExecute(t *testing.T) {
 
 	// unauthorized - trialCtx so we don't change state
 	trialCtx := ctx.WithMultiStore(ctx.MultiStore().CacheWrap().(sdk.MultiStore))
-	res, err := keeper.Execute(trialCtx, addr, creator, deposit, []byte(`{}`))
+	res, err := keeper.Execute(trialCtx, addr, creator, nil, []byte(`{}`))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "Unauthorized")
 
@@ -128,7 +129,6 @@ func TestExecute(t *testing.T) {
 	start := time.Now()
 	gasBefore := ctx.GasMeter().GasConsumed()
 
-	// TODO: rust doesn't like null array - need [] or 0
 	res, err = keeper.Execute(ctx, addr, fred, topUp, []byte(`{}`))
 	diff := time.Now().Sub(start)
 	require.NoError(t, err)

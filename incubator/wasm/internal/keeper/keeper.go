@@ -104,10 +104,6 @@ func (k Keeper) Instantiate(ctx sdk.Context, creator sdk.AccAddress, codeID uint
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	// instantiate wasm contract
-	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
-	// trying to encode empty arrays as [] in go is a big wish but not moving much:
-	// https://github.com/golang/go/issues/27589
-	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, gas)
 	if err != nil {
@@ -155,10 +151,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
-	// WARNING: this fails if coins is {} as it encodes a null, which is not a proper value for an array according to rust
-	// trying to encode empty arrays as [] in go is a big wish but not moving much:
-	// https://github.com/golang/go/issues/27589
-	// TODO: figure out a proper solution, until then, we just send non-zero payments on every call
 	gas := gasForContract(ctx)
 	res, err := k.wasmer.Execute(codeInfo.CodeHash, params, msgs, prefixStore, gas)
 	if err != nil {
