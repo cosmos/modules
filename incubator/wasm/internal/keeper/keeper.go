@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmwasm/modules/incubator/contract/internal/types"
+	"github.com/cosmos/modules/incubator/wasm/internal/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -188,6 +188,7 @@ func (k Keeper) dispatchMessage(ctx sdk.Context, contract exported.Account, msg 
 		if stderr != nil {
 			return sdk.ErrInvalidAddress(msg.Contract.ContractAddr)
 		}
+		// TODO: use non nil payment once we update go-cosmwasm (ContractMsg contains optional payment)
 		_, err := k.Execute(ctx, targetAddr, contract.GetAddress(), nil, []byte(msg.Contract.Msg))
 		if err != nil {
 			return err

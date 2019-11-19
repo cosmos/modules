@@ -1,4 +1,4 @@
-module github.com/cosmwasm/modules/incubator/contract
+module github.com/cosmos/modules/incubator/wasm
 
 go 1.13
 
