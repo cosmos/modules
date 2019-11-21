@@ -13,8 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/modules/incubator/wasm/internal/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	"github.com/cosmos/modules/incubator/wasm/internal/types"
 )
 
 // GasMultiplier is how many cosmwasm gas points = 1 sdk gas point
@@ -164,6 +165,45 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	return types.CosmosResult(*res), nil
+}
+
+func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *types.Contract {
+	store := ctx.KVStore(k.storeKey)
+	var contract types.Contract
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return nil
+	}
+	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+	return &contract
+}
+
+func (k Keeper) GetContractState(ctx sdk.Context, contractAddress sdk.AccAddress) sdk.Iterator {
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	return prefixStore.Iterator(nil, nil)
+}
+
+func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
+	store := ctx.KVStore(k.storeKey)
+	var codeInfo types.CodeInfo
+	codeInfoBz := store.Get(types.GetCodeKey(codeID))
+	if codeInfoBz == nil {
+		return nil
+	}
+	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
+	return &codeInfo
+}
+
+func (k Keeper) GetByteCode(ctx sdk.Context, codeID uint64) ([]byte, error) {
+	store := ctx.KVStore(k.storeKey)
+	var codeInfo types.CodeInfo
+	codeInfoBz := store.Get(types.GetCodeKey(codeID))
+	if codeInfoBz == nil {
+		return nil, nil
+	}
+	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
+	return k.wasmer.GetCode(codeInfo.CodeHash)
 }
 
 func (k Keeper) dispatchMessages(ctx sdk.Context, contract exported.Account, msgs []wasmTypes.CosmosMsg) sdk.Error {
