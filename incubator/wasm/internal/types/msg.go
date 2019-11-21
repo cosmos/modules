@@ -8,8 +8,6 @@ const (
 	MaxWasmSize = 500 * 1024
 )
 
-type CodeID []byte
-
 type MsgStoreCode struct {
 	Sender       sdk.AccAddress `json:"sender" yaml:"sender"`
 	WASMByteCode []byte         `json:"wasm_byte_code" yaml:"wasm_byte_code"`
@@ -43,7 +41,7 @@ func (msg MsgStoreCode) GetSigners() []sdk.AccAddress {
 
 type MsgInstantiateContract struct {
 	Sender    sdk.AccAddress `json:"sender" yaml:"sender"`
-	Code      CodeID         `json:"code_id" yaml:"code_id"`
+	Code      uint64         `json:"code_id" yaml:"code_id"`
 	InitMsg   []byte         `json:"init_msg" yaml:"init_msg"`
 	InitFunds sdk.Coins      `json:"init_funds" yaml:"init_funds"`
 }
