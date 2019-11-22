@@ -108,6 +108,65 @@ func TestHandleCreate(t *testing.T) {
 	}
 }
 
+type initMsg struct {
+	Verifier    string `json:"verifier"`
+	Beneficiary string `json:"beneficiary"`
+}
+
+type state struct {
+	Verifier    string `json:"verifier"`
+	Beneficiary string `json:"beneficiary"`
+	Funder 		string `json:"funder"`
+}
+
+func TestHandleInstantiate(t *testing.T) {
+	data, cleanup := setupTest(t)
+	defer cleanup()
+
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
+	creator := createFakeFundedAccount(data.ctx, data.acctKeeper, deposit)
+
+	h := data.module.NewHandler()
+	q := data.module.NewQuerierHandler()
+	
+	msg := MsgStoreCode{
+		Sender:       creator,
+		WASMByteCode: testContract,
+	}
+	res := h(data.ctx, msg)
+	require.True(t, res.IsOK())
+	require.Equal(t, res.Data, []byte("1"))
+
+	initMsg := initMsg{
+		Verifier:    "fred",
+		Beneficiary: "bob",
+	}
+	initMsgBz, err := json.Marshal(initMsg)
+	require.NoError(t, err)
+
+	// create with no balance is also legal
+	initCmd := MsgInstantiateContract{
+		Sender:       creator,
+		Code: 1,
+		InitMsg: initMsgBz,
+		InitFunds: nil,
+	}
+	res = h(data.ctx, initCmd)
+	require.True(t, res.IsOK())
+	contractAddr := sdk.AccAddress(res.Data)
+	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", contractAddr.String())
+
+	assertCodeList(t, q, data.ctx, 1)
+	assertCodeBytes(t, q, data.ctx, 1, testContract)
+	// TODO: query the contract state
+	assertContractList(t, q, data.ctx, []string{contractAddr.String()})
+	assertContractState(t, q, data.ctx, contractAddr, state{
+		Verifier:    "fred",
+		Beneficiary: "bob",
+		Funder: creator.String(),
+	})
+}
+
 func assertCodeList(t *testing.T, q sdk.Querier, ctx sdk.Context, expectedNum int) {
 	bz, sdkerr := q(ctx, []string{QueryListCode}, abci.RequestQuery{})
 	require.NoError(t, sdkerr)
@@ -143,4 +202,50 @@ func assertCodeBytes(t *testing.T, q sdk.Querier, ctx sdk.Context, codeID uint64
 	require.NoError(t, err)
 
 	assert.Equal(t, expectedBytes, res.Code)
+}
+
+func assertContractList(t *testing.T, q sdk.Querier, ctx sdk.Context, addrs []string) {
+	bz, sdkerr := q(ctx, []string{QueryListContracts}, abci.RequestQuery{})
+	require.NoError(t, sdkerr)
+
+	if len(bz) == 0 {
+		require.Equal(t, len(addrs), 0)
+		return
+	}
+
+	var res []string
+	err := json.Unmarshal(bz, &res)
+	require.NoError(t, err)
+
+	assert.Equal(t, addrs, res)
+}
+
+type model struct {
+	Key string `json:"key"`
+	Value string `json:"value"`
+}
+
+func assertContractState(t *testing.T, q sdk.Querier, ctx sdk.Context, addr sdk.AccAddress, expected state) {
+	path := []string{QueryGetContractState, addr.String()}
+	bz, sdkerr := q(ctx, path, abci.RequestQuery{})
+	require.NoError(t, sdkerr)
+
+	var res []model
+	err := json.Unmarshal(bz, &res)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(res), "#v", res)
+	require.Equal(t, "config", res[0].Key)
+
+	expectedBz, err := json.Marshal(expected)
+	require.NoError(t, err)
+	assert.Equal(t, string(expectedBz), res[0].Value)
+}
+
+func createFakeFundedAccount(ctx sdk.Context, am auth.AccountKeeper, coins sdk.Coins) sdk.AccAddress {
+	_, _, addr := keyPubAddr()
+	baseAcct := auth.NewBaseAccountWithAddress(addr)
+	_ = baseAcct.SetCoins(coins)
+	am.SetAccount(ctx, &baseAcct)
+
+	return addr
 }

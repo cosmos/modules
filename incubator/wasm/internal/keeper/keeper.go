@@ -178,6 +178,19 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return &contract
 }
 
+func (k Keeper) ListContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.Contract) bool) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ContractKeyPrefix)
+	iter := prefixStore.Iterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		var contract types.Contract
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &contract)
+		// cb returns true to stop early
+		if cb(iter.Key(), contract) {
+			break
+		}
+	}
+}
+
 func (k Keeper) GetContractState(ctx sdk.Context, contractAddress sdk.AccAddress) sdk.Iterator {
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)

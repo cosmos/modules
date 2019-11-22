@@ -54,18 +54,10 @@ func queryContractInfo(ctx sdk.Context, bech string, req abci.RequestQuery, keep
 
 func queryContractList(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var addrs []string
-
-	var i uint64 // 1?
-	for true {
-		addr := addrFromUint64(i)
-		i++
-		res := keeper.GetContractInfo(ctx, addr)
-		if res == nil {
-			break
-		}
+	keeper.ListContractInfo(ctx, func(addr sdk.AccAddress, _ types.Contract) bool {
 		addrs = append(addrs, addr.String())
-	}
-
+		return false
+	})
 	bz, err := json.MarshalIndent(addrs, "", "  ")
 	if err != nil {
 		return nil, sdk.ErrInvalidAddress(err.Error())
@@ -111,7 +103,6 @@ func queryCode(ctx sdk.Context, codeIDstr string, req abci.RequestQuery, keeper 
 		return nil, sdk.ErrUnknownRequest("invalid codeID: " + err.Error())
 	}
 
-	// TODO!!!
 	code, err := keeper.GetByteCode(ctx, codeID)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest("loading wasm code: " + err.Error())
