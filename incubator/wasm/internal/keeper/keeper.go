@@ -164,6 +164,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		return sdk.Result{}, sdkerr
 	}
 
+	fmt.Println("success!")
 	return types.CosmosResult(*res), nil
 }
 

@@ -158,7 +158,7 @@ func TestHandleInstantiate(t *testing.T) {
 
 	assertCodeList(t, q, data.ctx, 1)
 	assertCodeBytes(t, q, data.ctx, 1, testContract)
-	
+
 	assertContractList(t, q, data.ctx, []string{contractAddr.String()})
 	assertContractInfo(t, q, data.ctx, contractAddr, 1, creator)
 	assertContractState(t, q, data.ctx, contractAddr, state{
@@ -167,6 +167,82 @@ func TestHandleInstantiate(t *testing.T) {
 		Funder: creator.String(),
 	})
 }
+
+func TestHandleExecute(t *testing.T) {
+	data, cleanup := setupTest(t)
+	defer cleanup()
+
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
+	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
+	creator := createFakeFundedAccount(data.ctx, data.acctKeeper, deposit.Add(deposit))
+	fred := createFakeFundedAccount(data.ctx, data.acctKeeper, topUp)
+
+	h := data.module.NewHandler()
+	// q := data.module.NewQuerierHandler()
+
+	msg := MsgStoreCode{
+		Sender:       creator,
+		WASMByteCode: testContract,
+	}
+	res := h(data.ctx, msg)
+	require.True(t, res.IsOK())
+	require.Equal(t, res.Data, []byte("1"))
+
+	_, _, bob := keyPubAddr()
+	initMsg := initMsg{
+		Verifier:    fred.String(),
+		Beneficiary: bob.String(),
+	}
+	initMsgBz, err := json.Marshal(initMsg)
+	require.NoError(t, err)
+
+	initCmd := MsgInstantiateContract{
+		Sender:       creator,
+		Code: 1,
+		InitMsg: initMsgBz,
+		InitFunds: deposit,
+	}
+	res = h(data.ctx, initCmd)
+	require.True(t, res.IsOK())
+	contractAddr := sdk.AccAddress(res.Data)
+	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", contractAddr.String())
+
+	// ensure bob doesn't exist
+	bobAcct := data.acctKeeper.GetAccount(data.ctx, bob)
+	require.Nil(t, bobAcct)
+
+	// ensure funder has reduced balance
+	creatorAcct := data.acctKeeper.GetAccount(data.ctx, creator)
+	require.NotNil(t, creatorAcct)
+	// we started at 2*deposit, should have spent one above
+	assert.Equal(t, deposit, creatorAcct.GetCoins())
+
+	// ensure contract has updated balance
+	contractAcct := data.acctKeeper.GetAccount(data.ctx, contractAddr)
+	require.NotNil(t, contractAcct)
+	assert.Equal(t, deposit, contractAcct.GetCoins())
+
+	execCmd := MsgExecuteContract{
+		Sender:       fred,
+		Contract: contractAddr,
+		Msg: []byte("{}"),
+		SentFunds: topUp,
+	}
+	res = h(data.ctx, execCmd)
+	require.True(t, res.IsOK())
+
+	// ensure bob now exists and got both payments released
+	bobAcct = data.acctKeeper.GetAccount(data.ctx, bob)
+	require.NotNil(t, bobAcct)
+	balance := bobAcct.GetCoins()
+	assert.Equal(t, deposit.Add(topUp), balance)
+
+	// ensure contract has updated balance
+	contractAcct = data.acctKeeper.GetAccount(data.ctx, contractAddr)
+	require.NotNil(t, contractAcct)
+	assert.Equal(t, sdk.Coins(nil), contractAcct.GetCoins())
+}
+
 
 func assertCodeList(t *testing.T, q sdk.Querier, ctx sdk.Context, expectedNum int) {
 	bz, sdkerr := q(ctx, []string{QueryListCode}, abci.RequestQuery{})
