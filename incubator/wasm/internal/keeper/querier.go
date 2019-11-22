@@ -55,7 +55,7 @@ func queryContractInfo(ctx sdk.Context, bech string, req abci.RequestQuery, keep
 func queryContractList(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var addrs []string
 
-	var i uint64
+	var i uint64 // 1?
 	for true {
 		addr := addrFromUint64(i)
 		i++
@@ -101,6 +101,10 @@ func queryContractState(ctx sdk.Context, bech string, req abci.RequestQuery, kee
 	return bz, nil
 }
 
+type wasmCode struct {
+	Code []byte `json:"code", yaml:"code"`
+}
+
 func queryCode(ctx sdk.Context, codeIDstr string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	codeID, err := strconv.ParseUint(codeIDstr, 10, 64)
 	if err != nil {
@@ -112,15 +116,21 @@ func queryCode(ctx sdk.Context, codeIDstr string, req abci.RequestQuery, keeper 
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest("loading wasm code: " + err.Error())
 	}
-	return code, nil
+
+	bz, err := json.MarshalIndent(wasmCode{code}, "", "  ")
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(err.Error())
+	}
+	return bz, nil
 }
 
 func queryCodeList(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var info []*types.CodeInfo
 
-	var i uint64
+	i := uint64(1)
 	for true {
 		res := keeper.GetCodeInfo(ctx, i)
+		i++
 		if res == nil {
 			break
 		}

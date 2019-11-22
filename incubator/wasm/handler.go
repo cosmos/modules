@@ -8,7 +8,7 @@ import (
 
 const (
 	AttributeKeyContract = "contract_address"
-	AttributeKeyCodeID = "code_id"
+	AttributeKeyCodeID   = "code_id"
 )
 
 // NewHandler returns a handler for "bank" type messages.
@@ -44,13 +44,13 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg MsgStoreCode) sdk.Result {
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 			sdk.NewAttribute(sdk.AttributeKeyAction, "store-code"),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),	
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(AttributeKeyCodeID, fmt.Sprintf("%d", codeID)),
 		),
 	)
 
 	return sdk.Result{
-		Data: []byte(fmt.Sprintf("%d", codeID)),
+		Data:   []byte(fmt.Sprintf("%d", codeID)),
 		Events: ctx.EventManager().Events(),
 	}
 }
@@ -73,7 +73,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg MsgInstantiateContract) sd
 	)
 
 	return sdk.Result{
-		Data: contractAddr,
+		Data:   contractAddr,
 		Events: ctx.EventManager().Events(),
 	}
 }
@@ -89,7 +89,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg MsgExecuteContract) sdk.Result
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 			sdk.NewAttribute(sdk.AttributeKeyAction, "execute"),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),			
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 			sdk.NewAttribute(AttributeKeyContract, msg.Contract.String()),
 		),
 	)
@@ -97,6 +97,3 @@ func handleExecute(ctx sdk.Context, k Keeper, msg MsgExecuteContract) sdk.Result
 	res.Events = append(res.Events, ctx.EventManager().Events()...)
 	return res
 }
-
-
-
