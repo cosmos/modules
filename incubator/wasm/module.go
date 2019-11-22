@@ -89,10 +89,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants registers the wasm module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO??
-	// RegisterInvariants(ir, am.keeper)
-}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the wasm module.
 func (AppModule) Route() string {
@@ -101,8 +98,7 @@ func (AppModule) Route() string {
 
 // NewHandler returns an sdk.Handler for the wasm module.
 func (am AppModule) NewHandler() sdk.Handler { 
-	// TODO
-	return nil 
+	return NewHandler(am.keeper)
 }
 
 // QuerierRoute returns the wasm module's querier route name.
@@ -112,9 +108,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the wasm module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	// TODO
-	// return NewQuerier(am.keeper)
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the wasm module. It returns
