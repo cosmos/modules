@@ -158,8 +158,9 @@ func TestHandleInstantiate(t *testing.T) {
 
 	assertCodeList(t, q, data.ctx, 1)
 	assertCodeBytes(t, q, data.ctx, 1, testContract)
-	// TODO: query the contract state
+	
 	assertContractList(t, q, data.ctx, []string{contractAddr.String()})
+	assertContractInfo(t, q, data.ctx, contractAddr, 1, creator)
 	assertContractState(t, q, data.ctx, contractAddr, state{
 		Verifier:    "fred",
 		Beneficiary: "bob",
@@ -239,6 +240,19 @@ func assertContractState(t *testing.T, q sdk.Querier, ctx sdk.Context, addr sdk.
 	expectedBz, err := json.Marshal(expected)
 	require.NoError(t, err)
 	assert.Equal(t, string(expectedBz), res[0].Value)
+}
+
+func assertContractInfo(t *testing.T, q sdk.Querier, ctx sdk.Context, addr sdk.AccAddress, codeID uint64, creator sdk.AccAddress) {
+	path := []string{QueryGetContract, addr.String()}
+	bz, sdkerr := q(ctx, path, abci.RequestQuery{})
+	require.NoError(t, sdkerr)
+
+	var res Contract
+	err := json.Unmarshal(bz, &res)
+	require.NoError(t, err)
+
+	assert.Equal(t, codeID, res.CodeID)
+	assert.Equal(t, creator, res.Creator)
 }
 
 func createFakeFundedAccount(ctx sdk.Context, am auth.AccountKeeper, coins sdk.Coins) sdk.AccAddress {
