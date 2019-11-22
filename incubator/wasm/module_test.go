@@ -116,7 +116,7 @@ type initMsg struct {
 type state struct {
 	Verifier    string `json:"verifier"`
 	Beneficiary string `json:"beneficiary"`
-	Funder 		string `json:"funder"`
+	Funder      string `json:"funder"`
 }
 
 func TestHandleInstantiate(t *testing.T) {
@@ -128,7 +128,7 @@ func TestHandleInstantiate(t *testing.T) {
 
 	h := data.module.NewHandler()
 	q := data.module.NewQuerierHandler()
-	
+
 	msg := MsgStoreCode{
 		Sender:       creator,
 		WASMByteCode: testContract,
@@ -146,9 +146,9 @@ func TestHandleInstantiate(t *testing.T) {
 
 	// create with no balance is also legal
 	initCmd := MsgInstantiateContract{
-		Sender:       creator,
-		Code: 1,
-		InitMsg: initMsgBz,
+		Sender:    creator,
+		Code:      1,
+		InitMsg:   initMsgBz,
 		InitFunds: nil,
 	}
 	res = h(data.ctx, initCmd)
@@ -164,7 +164,7 @@ func TestHandleInstantiate(t *testing.T) {
 	assertContractState(t, q, data.ctx, contractAddr, state{
 		Verifier:    "fred",
 		Beneficiary: "bob",
-		Funder: creator.String(),
+		Funder:      creator.String(),
 	})
 }
 
@@ -178,7 +178,7 @@ func TestHandleExecute(t *testing.T) {
 	fred := createFakeFundedAccount(data.ctx, data.acctKeeper, topUp)
 
 	h := data.module.NewHandler()
-	// q := data.module.NewQuerierHandler()
+	q := data.module.NewQuerierHandler()
 
 	msg := MsgStoreCode{
 		Sender:       creator,
@@ -197,9 +197,9 @@ func TestHandleExecute(t *testing.T) {
 	require.NoError(t, err)
 
 	initCmd := MsgInstantiateContract{
-		Sender:       creator,
-		Code: 1,
-		InitMsg: initMsgBz,
+		Sender:    creator,
+		Code:      1,
+		InitMsg:   initMsgBz,
 		InitFunds: deposit,
 	}
 	res = h(data.ctx, initCmd)
@@ -223,9 +223,9 @@ func TestHandleExecute(t *testing.T) {
 	assert.Equal(t, deposit, contractAcct.GetCoins())
 
 	execCmd := MsgExecuteContract{
-		Sender:       fred,
-		Contract: contractAddr,
-		Msg: []byte("{}"),
+		Sender:    fred,
+		Contract:  contractAddr,
+		Msg:       []byte("{}"),
 		SentFunds: topUp,
 	}
 	res = h(data.ctx, execCmd)
@@ -241,8 +241,19 @@ func TestHandleExecute(t *testing.T) {
 	contractAcct = data.acctKeeper.GetAccount(data.ctx, contractAddr)
 	require.NotNil(t, contractAcct)
 	assert.Equal(t, sdk.Coins(nil), contractAcct.GetCoins())
-}
 
+	// ensure all contract state is as after init
+	assertCodeList(t, q, data.ctx, 1)
+	assertCodeBytes(t, q, data.ctx, 1, testContract)
+
+	assertContractList(t, q, data.ctx, []string{contractAddr.String()})
+	assertContractInfo(t, q, data.ctx, contractAddr, 1, creator)
+	assertContractState(t, q, data.ctx, contractAddr, state{
+		Verifier:    fred.String(),
+		Beneficiary: bob.String(),
+		Funder:      creator.String(),
+	})
+}
 
 func assertCodeList(t *testing.T, q sdk.Querier, ctx sdk.Context, expectedNum int) {
 	bz, sdkerr := q(ctx, []string{QueryListCode}, abci.RequestQuery{})
@@ -298,7 +309,7 @@ func assertContractList(t *testing.T, q sdk.Querier, ctx sdk.Context, addrs []st
 }
 
 type model struct {
-	Key string `json:"key"`
+	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 

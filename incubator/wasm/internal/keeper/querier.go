@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	QueryListContracts = "list-contracts"
-	QueryGetContract  = "contract-info"
-	QueryGetContractState  = "contract-state"
-	QueryGetCode  = "code"
-	QueryListCode  = "list-code"
+	QueryListContracts    = "list-contracts"
+	QueryGetContract      = "contract-info"
+	QueryGetContractState = "contract-state"
+	QueryGetCode          = "code"
+	QueryListCode         = "list-code"
 )
 
 // NewQuerier creates a new querier
@@ -66,7 +66,7 @@ func queryContractList(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([
 }
 
 type model struct {
-	Key string `json:"key"`
+	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
@@ -80,7 +80,7 @@ func queryContractState(ctx sdk.Context, bech string, req abci.RequestQuery, kee
 	var state []model
 	for ; iter.Valid(); iter.Next() {
 		m := model{
-			Key: string(iter.Key()), 
+			Key:   string(iter.Key()),
 			Value: string(iter.Value()),
 		}
 		state = append(state, m)

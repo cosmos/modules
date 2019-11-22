@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the wasm module.
@@ -66,7 +66,6 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return nil
 }
 
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the wasm module.
@@ -78,8 +77,8 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		keeper:              keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 
@@ -97,7 +96,7 @@ func (AppModule) Route() string {
 }
 
 // NewHandler returns an sdk.Handler for the wasm module.
-func (am AppModule) NewHandler() sdk.Handler { 
+func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
 }
 
