@@ -43,4 +43,4 @@ jobs:
       shell: bash
     - uses: actions/checkout@v1
     - name: Unit_test
-      run: make test
+      run: cd incubator/nft && make test && pwd
