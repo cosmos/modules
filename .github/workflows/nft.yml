@@ -1,0 +1,46 @@
+name: NFT
+on: [pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
+    - uses: actions/checkout@v1
+    - name: install
+      run: cd incubator/nft && make install
+    # Cache go modules
+    - uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    # Cache bin
+    - uses: actions/cache@v1
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-tm-binary
+  unit-test: 
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
+    - uses: actions/checkout@v1
+    - name: Unit_test
+      run: make test
