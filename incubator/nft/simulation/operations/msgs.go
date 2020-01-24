@@ -17,8 +17,9 @@ import (
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account)
-		(opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -37,7 +38,7 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 		}
 
 		ctx, _ = ctx.CacheContext()
-		_, err = handler(ctx, msg)
+		_, err := handler(ctx, msg)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -49,8 +50,9 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
 func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account)
-		(opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -68,7 +70,7 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 		}
 
 		ctx, _ = ctx.CacheContext()
-		_, err = handler(ctx, msg).IsOK()
+		_, err := handler(ctx, msg)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -80,8 +82,9 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 // SimulateMsgMintNFT simulates a mint of an NFT
 func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		a1, _ := simulation.RandomAcc(r, accs)
 		a2, _ := simulation.RandomAcc(r, accs)
 
@@ -98,7 +101,7 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 		}
 
 		ctx, _ = ctx.CacheContext()
-		_, err = handler(ctx, msg)
+		_, err := handler(ctx, msg)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -110,8 +113,9 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
 func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 	handler := nft.GenericHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account)
-		(opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -124,7 +128,7 @@ func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 		}
 
 		ctx, _ = ctx.CacheContext()
-		_, err = handler(ctx, msg)
+		_, err := handler(ctx, msg)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
