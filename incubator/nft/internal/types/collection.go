@@ -35,7 +35,7 @@ func (collection Collection) GetNFT(id string) (nft exported.NFT, err error) {
 	if found {
 		return nft, nil
 	}
-	return nil, sdkerrors.Wrap(UnknownNFT,
+	return nil, sdkerrors.Wrap(ErrUnknownNFT,
 		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
 	)
 }
@@ -51,7 +51,7 @@ func (collection Collection) AddNFT(nft exported.NFT) (Collection, error) {
 	id := nft.GetID()
 	exists := collection.ContainsNFT(id)
 	if exists {
-		return collection, sdkerrors.Wrap(NFTAlreadyExists,
+		return collection, sdkerrors.Wrap(ErrNFTAlreadyExists,
 			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
 		)
 	}
@@ -64,7 +64,7 @@ func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
 
 	if !ok {
-		return collection, sdkerrors.Wrap(UnknownNFT,
+		return collection, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
@@ -76,7 +76,7 @@ func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, error) {
 func (collection Collection) DeleteNFT(nft exported.NFT) (Collection, error) {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
-		return collection, sdkerrors.Wrap(UnknownNFT,
+		return collection, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}

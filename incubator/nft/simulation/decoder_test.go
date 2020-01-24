@@ -32,10 +32,10 @@ func TestDecodeStore(t *testing.T) {
 	collection := types.NewCollection("kitties", types.NFTs{&nft})
 	idCollection := types.NewIDCollection("kitties", []string{"1", "2", "3"})
 
-	kvPairs := kv.KVPairs{
-		kv.KVPair{Key: types.GetCollectionKey("kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(collection)},
-		kv.KVPair{Key: types.GetOwnerKey(addr, "kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(idCollection)},
-		kv.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.GetCollectionKey("kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(collection)},
+		kv.Pair{Key: types.GetOwnerKey(addr, "kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(idCollection)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {
