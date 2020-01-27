@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -64,7 +65,7 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msgCreateValidatorJSON{
 		Description:      msg.Description,
 		ValidatorAddress: msg.ValidatorAddress,
-		PubKey:           sdk.MustBech32ifyConsPub(msg.PubKey),
+		PubKey:           sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, msg.PubKey),
 	})
 }
 
@@ -79,7 +80,7 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Description = msgCreateValJSON.Description
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
 	var err error
-	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	msg.PubKey, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msgCreateValJSON.PubKey)
 	if err != nil {
 		return err
 	}
@@ -94,16 +95,16 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+func (msg MsgCreateValidator) ValidateBasic() error {
 	// note that unmarshaling from bech32 ensures either empty or valid
 	// if Params.AcceptAllValidators = false {
 	// 	return
 	// }
 	if msg.ValidatorAddress.Empty() {
-		return stakingtypes.ErrNilValidatorAddr(DefaultCodeSpace)
+		return stakingtypes.ErrEmptyValidatorAddr
 	}
 	if msg.Description == (stakingtypes.Description{}) {
-		return sdk.NewError(stakingtypes.DefaultCodespace, stakingtypes.CodeInvalidInput, "description must be included")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	return nil
@@ -136,13 +137,13 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgEditValidator) ValidateBasic() sdk.Error {
+func (msg MsgEditValidator) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
-		return sdk.NewError(DefaultCodeSpace, stakingtypes.CodeInvalidInput, "nil validator address")
+		return stakingtypes.ErrEmptyValidatorAddr
 	}
 
 	if msg.Description == (stakingtypes.Description{}) {
-		return sdk.NewError(DefaultCodeSpace, stakingtypes.CodeInvalidInput, "transaction must include some information to modify")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	return nil

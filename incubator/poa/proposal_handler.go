@@ -13,7 +13,7 @@ import (
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
 func NewPOAProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
+	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case MsgProposeCreateValidator:
 			return handleMsgProposeCreateValidator(ctx, k, c)
@@ -25,7 +25,7 @@ func NewPOAProposalHandler(k Keeper) govtypes.Handler {
 	}
 }
 
-func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCreateValidator) sdk.Error {
+func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCreateValidator) error {
 	val := c.Validator
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, val.ValidatorAddress); found {
@@ -73,6 +73,6 @@ func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCrea
 	return nil
 }
 
-// func handleMsgIncreaseWeight(ctx sdk.Context, k Keeper, c MsgProposeIncreaseWeight) sdk.Error {
+// func handleMsgIncreaseWeight(ctx sdk.Context, k Keeper, c MsgProposeIncreaseWeight) error {
 
 // }

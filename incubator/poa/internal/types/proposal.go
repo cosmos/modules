@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -63,7 +64,7 @@ func (mpc MsgProposeCreateValidator) String() string {
 }
 
 // ValidateBasic validates the Creation of a validator proposal
-func (mpc MsgProposeCreateValidator) ValidateBasic() sdk.Error {
+func (mpc MsgProposeCreateValidator) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpc)
 	if err != nil {
 		return err
@@ -72,15 +73,15 @@ func (mpc MsgProposeCreateValidator) ValidateBasic() sdk.Error {
 	return ValidateChanges(mpc)
 }
 
-func ValidateChanges(cVA MsgProposeCreateValidator) sdk.Error {
+func ValidateChanges(cVA MsgProposeCreateValidator) error {
 	if len(cVA.Title) == 0 {
-		return params.ErrEmptyChanges(DefaultCodeSpace)
+		return params.ErrEmptyChanges
 	}
 	if cVA.Validator.Description == (stakingtypes.Description{}) {
-		return sdk.NewError(stakingtypes.DefaultCodespace, stakingtypes.CodeInvalidInput, "description must be included")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 	if cVA.Validator.ValidatorAddress.Empty() {
-		return stakingtypes.ErrNilValidatorAddr(DefaultCodeSpace)
+		return stakingtypes.ErrEmptyValidatorAddr
 	}
 	return nil
 }
@@ -125,17 +126,17 @@ func (mpi MsgProposeIncreaseWeight) String() string {
 }
 
 // ValidateBasic validates the Creation of a validator proposal
-func (mpi MsgProposeIncreaseWeight) ValidateBasic() sdk.Error {
+func (mpi MsgProposeIncreaseWeight) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpi)
 	if err != nil {
 		return err
 	}
 
 	if len(mpi.Title) == 0 || len(mpi.Description) == 0 {
-		return params.ErrEmptyChanges(DefaultCodeSpace)
+		return params.ErrEmptyChanges
 	}
 	if mpi.Validator.ValidatorAddress.Empty() {
-		return stakingtypes.ErrNilValidatorAddr(DefaultCodeSpace)
+		return stakingtypes.ErrEmptyValidatorAddr
 	}
 	return nil
 }
