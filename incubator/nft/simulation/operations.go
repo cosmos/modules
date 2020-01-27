@@ -1,10 +1,11 @@
-package operations
+package simulation
 
 import (
 	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/incubator/nft"
@@ -12,7 +13,50 @@ import (
 	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
-// DONTCOVER
+const (
+	OpWeightedMsgTransferNFT     = " op_weighted_msg_transfer_nft"
+	OpWeightedMsgEditNFTMetadata = "op_weighted_msg_edit_nft_metadata"
+	OpWeightedMsgMintNFT         = "op_weighted_msg_mint_nft"
+	OpWeightedMsgBurnNFT         = "op_weighted_msg_burn_nft"
+)
+
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keeper.Keeper) simulation.WeightedOperations {
+
+	var (
+		weightedMsgTransferNFT     int
+		weightedMsgEditNFTMetadata int
+		weightedMsgMintNFT         int
+		weightedMsgBurnNFT         int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightedMsgTransferNFT, &weightedMsgTransferNFT, nil,
+		func(_ *rand.Rand) {
+			weightedMsgTransferNFT = 100
+		},
+	)
+	appParams.GetOrGenerate(cdc, OpWeightedMsgEditNFTMetadata, &weightedMsgEditNFTMetadata, nil,
+		func(_ *rand.Rand) {
+			weightedMsgEditNFTMetadata = 67
+		},
+	)
+	appParams.GetOrGenerate(cdc, OpWeightedMsgMintNFT, &weightedMsgMintNFT, nil,
+		func(_ *rand.Rand) {
+			weightedMsgMintNFT = 5
+		},
+	)
+	appParams.GetOrGenerate(cdc, OpWeightedMsgBurnNFT, &weightedMsgBurnNFT, nil,
+		func(_ *rand.Rand) {
+			weightedMsgBurnNFT = 5
+		},
+	)
+
+	return simulation.WeightedOperations{
+		simulation.NewweightedOperation(
+			weightedMsgTransferNFT, 
+			SimulateMsgTransferNFT(k),
+		)
+	}
+}
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
@@ -135,4 +179,38 @@ func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
+}
+
+func getRandomNFTFromOwner(ctx sdk.Context, k keeper.Keeper, r *rand.Rand) (address sdk.AccAddress, denom, nftID string) {
+	owners := k.GetOwners(ctx)
+
+	ownersLen := len(owners)
+	if ownersLen == 0 {
+		return nil, "", ""
+	}
+
+	// get random owner
+	i := r.Intn(ownersLen)
+	owner := owners[i]
+
+	idCollectionsLen := len(owner.IDCollections)
+	if idCollectionsLen == 0 {
+		return nil, "", ""
+	}
+
+	// get random collection from owner's balance
+	i = r.Intn(idCollectionsLen)
+	idsCollection := owner.IDCollections[i] // nfts IDs
+	denom = idsCollection.Denom
+
+	idsLen := len(idsCollection.IDs)
+	if idsLen == 0 {
+		return nil, "", ""
+	}
+
+	// get random nft from collection
+	i = r.Intn(idsLen)
+	nftID = idsCollection.IDs[i]
+
+	return owner.Address, denom, nftID
 }
