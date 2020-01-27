@@ -14,7 +14,6 @@ jobs:
         echo "::set-env name=GOPATH::$(go env GOPATH)"
         echo "::add-path::$(go env GOPATH)/bin"
         echo "::set-env name=GO111MODULE::"on""
-        go env
       shell: bash
     - name: install runsim
       run: |
@@ -56,9 +55,9 @@ jobs:
       with:
         path: ~/go/bin
         key: ${{ runner.os }}-go-runsim-binary
-    - name: test runsim
+    - name: test nondeterminism
       run: |
-        runsim
+        cd incubator/nft && make test-sim-nondeterminism
 
     
     #     requires:
