@@ -11,6 +11,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -112,7 +113,7 @@ type SimApp struct {
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
+	skipUpgradeHeights map[int64]bool, invCheckPeriod uint, baseAppOptions ...func(*bam.BaseApp),
 ) *SimApp {
 	cdc := MakeCodec()
 
@@ -163,8 +164,8 @@ func NewSimApp(
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
 		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper))
-	app.GovKeeper = gov.NewKeeper(app.cdc, keys[gov.StoreKey], govSubspace,
-		app.SupplyKeeper, &stakingKeeper, govRouter)
+
+	app.GovKeeper = gov.NewKeeper(app.cdc, keys[gov.StoreKey], govSubspace, app.SupplyKeeper, &stakingKeeper, govRouter)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -185,7 +186,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper, app.StakingKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		nft.NewAppModule(app.NFTKeeper),
+		nft.NewAppModule(app.NFTKeeper, app.AccountKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -220,7 +221,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.StakingKeeper),
-		// nft.NewAppModule(app.NFTKeeper),
+		nft.NewAppModule(app.NFTKeeper, app.AccountKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -256,8 +257,9 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState GenesisState
+	var genesisState simapp.GenesisState
 	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
+
 	return app.mm.InitGenesis(ctx, genesisState)
 }
 
@@ -289,6 +291,11 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // GetTKey returns the TransientStoreKey for the provided store key
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *SimApp) SimulationManager() *module.SimulationManager {
+	return app.sm
 }
 
 // GetMaccPerms returns a copy of the module account permissions

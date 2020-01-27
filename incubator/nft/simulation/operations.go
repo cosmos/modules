@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -92,15 +94,28 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
-		account := ak.GetAccount(ctx, simAccount.Address)
+		acc := ak.GetAccount(ctx, simAccount.Address)
+		coins := acc.SpendableCoins(ctx.BlockTime())
+
+		var (
+			fees sdk.Coins
+			err  error
+		)
+		coins, hasNeg := coins.SafeSub(coins)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		}
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{acc.GetSequence()},
 			simAccount.PrivKey,
 		)
 
@@ -123,7 +138,21 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
+
 		acc := ak.GetAccount(ctx, ownerAddr)
+		coins := acc.SpendableCoins(ctx.BlockTime())
+
+		var (
+			fees sdk.Coins
+			err  error
+		)
+		coins, hasNeg := coins.SafeSub(coins)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		}
 
 		msg := types.NewMsgEditNFTMetadata(
 			ownerAddr,
@@ -136,6 +165,12 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
+		// find the acc in simulated acocunts
+		simAcc, ok := simulation.FindAccount(accs, ownerAddr)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found")
+		}
+
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
@@ -143,7 +178,7 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 			chainID,
 			[]uint64{acc.GetAccountNumber()},
 			[]uint64{acc.GetSequence()},
-			simAccount.PrivKey,
+			simAcc.PrivKey,
 		)
 
 		_, _, err = app.Deliver(tx)
@@ -174,15 +209,29 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+		acc := ak.GetAccount(ctx, a1.Address)
+		coins := acc.SpendableCoins(ctx.BlockTime())
+
+		var (
+			fees sdk.Coins
+			err  error
+		)
+		coins, hasNeg := coins.SafeSub(coins)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		}
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			simAccount.PrivKey,
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{acc.GetSequence()},
+			a1.PrivKey,
 		)
 
 		_, _, err = app.Deliver(tx)
@@ -199,6 +248,7 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -209,6 +259,37 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
+		acc := ak.GetAccount(ctx, ownerAddr)
+		coins := acc.SpendableCoins(ctx.BlockTime())
+
+		var (
+			fees sdk.Coins
+			err  error
+		)
+		coins, hasNeg := coins.SafeSub(coins)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		}
+
+		// find the acc in simulated acocunts
+		simAcc, ok := simulation.FindAccount(accs, ownerAddr)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found")
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{acc.GetSequence()},
+			simAcc.PrivKey,
+		)
 
 		_, _, err = app.Deliver(tx)
 		if err != nil {

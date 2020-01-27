@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/modules/incubator/nft/client/cli"
 	"github.com/cosmos/modules/incubator/nft/client/rest"
 	"github.com/cosmos/modules/incubator/nft/internal/types"
-	"github.com/cosmos/modules/incubator/nft/simulationypes"
+	"github.com/cosmos/modules/incubator/nft/simulation"
 )
 
 var (
@@ -90,8 +90,8 @@ func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 
-		keeper: keeper,
-		accountKeeper:  accountKeeper,
+		keeper:        keeper,
+		accountKeeper: accountKeeper,
 	}
 }
 
@@ -153,9 +153,7 @@ func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
-	return nil
-}
+func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent { return nil }
 
 // GenerateGenesisState creates a randomized GenState of the nft module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
@@ -163,11 +161,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RandomizedParams doesn't create randomized nft param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
-}
+func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange { return nil }
 
 // WeightedOperations doesn't return any operation for the nft module.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.AccountKeeper, am.keeper)
+	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper)
 }
