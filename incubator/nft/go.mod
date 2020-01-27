@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/cosmos/cosmos-sdk v0.38.0
+	github.com/cosmos/tools/cmd/runsim v1.0.0 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.5
