@@ -10,9 +10,9 @@
 
 ## Quick Start
 
-To learn how the SDK works from a high-level perspective, go to the [SDK Intro](https://github.com/cosmos/cosmos-sdk/docs/intro/intro.md).
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](https://docs.cosmos.network/master/intro/overview.html).
 
-If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-tutorials). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
 
 For more, please go to the [Cosmos SDK Docs](https://github.com/cosmos/cosmos-sdk/docs/README.md)
 

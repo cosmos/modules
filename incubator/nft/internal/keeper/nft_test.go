@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/modules/incubator/nft/internal/keeper"
 	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
@@ -48,6 +49,9 @@ func TestGetNFT(t *testing.T) {
 	require.Equal(t, receivedNFT2.GetID(), id2)
 	require.True(t, receivedNFT2.GetOwner().Equals(address))
 	require.Equal(t, receivedNFT2.GetTokenURI(), tokenURI)
+
+	msg, fail := keeper.SupplyInvariant(app.NFTKeeper)(ctx)
+	require.False(t, fail, msg)
 }
 
 func TestUpdateNFT(t *testing.T) {
@@ -110,6 +114,9 @@ func TestDeleteNFT(t *testing.T) {
 
 	owner := app.NFTKeeper.GetOwner(ctx, address)
 	require.Equal(t, 0, owner.Supply())
+
+	msg, fail := keeper.SupplyInvariant(app.NFTKeeper)(ctx)
+	require.False(t, fail, msg)
 }
 
 func TestIsNFT(t *testing.T) {
