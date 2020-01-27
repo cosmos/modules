@@ -100,7 +100,7 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, simapp.AppStateFn(app.Codec(), app.SimulationManager()),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 		simapp.SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -132,7 +132,7 @@ func TestAppImportExport(t *testing.T) {
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, simapp.FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
-	var genesisState simapp.GenesisState
+	var genesisState GenesisState
 	err = app.Codec().UnmarshalJSON(appState, &genesisState)
 	require.NoError(t, err)
 
@@ -183,11 +183,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, simapp.FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
-
+	fmt.Println("here")
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, simapp.AppStateFn(app.Codec(), app.SimulationManager()),
-		simapp.SimulationOperations(app, app.Codec(), config),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
@@ -228,7 +228,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, simapp.AppStateFn(app.Codec(), app.SimulationManager()),
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 		simapp.SimulationOperations(newApp, newApp.Codec(), config),
 		newApp.ModuleAccountAddrs(), config,
 	)
@@ -274,7 +274,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, simapp.AppStateFn(app.Codec(), app.SimulationManager()),
+				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 				simapp.SimulationOperations(app, app.Codec(), config),
 				app.ModuleAccountAddrs(), config,
 			)
