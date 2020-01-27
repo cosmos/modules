@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: Build
     steps:
-    - name: actions/setup-go@v1
+    - uses: actions/setup-go@v1
       id: go
     - name: Setup env for GO
       #  this is only used until the setup-go action is updated
