@@ -52,9 +52,21 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keep
 
 	return simulation.WeightedOperations{
 		simulation.NewweightedOperation(
-			weightedMsgTransferNFT, 
+			weightedMsgTransferNFT,
 			SimulateMsgTransferNFT(k),
-		)
+		),
+		simulation.NewweightedOperation(
+			weightedMsgEditNFTMetadata,
+			SimulateMsgEditNFTMetadata(k),
+		),
+		simulation.NewweightedOperation(
+			weightedMsgMintNFT,
+			SimulateMsgMintNFT(k),
+		),
+		simulation.NewweightedOperation(
+			weightedMsgBurnNFT,
+			SimulateMsgBurnNFT(k),
+		),
 	}
 }
 
