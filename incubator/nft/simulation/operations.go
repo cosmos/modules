@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/incubator/nft"
@@ -51,19 +52,19 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keep
 	)
 
 	return simulation.WeightedOperations{
-		simulation.NewweightedOperation(
+		simulation.NewWeightedOperation(
 			weightedMsgTransferNFT,
 			SimulateMsgTransferNFT(k),
 		),
-		simulation.NewweightedOperation(
+		simulation.NewWeightedOperation(
 			weightedMsgEditNFTMetadata,
 			SimulateMsgEditNFTMetadata(k),
 		),
-		simulation.NewweightedOperation(
+		simulation.NewWeightedOperation(
 			weightedMsgMintNFT,
 			SimulateMsgMintNFT(k),
 		),
-		simulation.NewweightedOperation(
+		simulation.NewWeightedOperation(
 			weightedMsgBurnNFT,
 			SimulateMsgBurnNFT(k),
 		),
@@ -72,7 +73,6 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keep
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -93,8 +93,19 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
-		ctx, _ = ctx.CacheContext()
-		_, err := handler(ctx, msg)
+		account := ak.GetAccount(ctx, simAccount.Address)
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			simAccount.PrivKey,
+		)
+
+		_, _, err = app.Deliver(tx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -109,6 +120,7 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -125,8 +137,17 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
-		ctx, _ = ctx.CacheContext()
-		_, err := handler(ctx, msg)
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{ownerAddr.GetAccountNumber()},
+			[]uint64{ownerAddr.GetSequence()},
+			simAccount.PrivKey,
+		)
+
+		_, _, err = app.Deliver(tx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -137,7 +158,6 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 
 // SimulateMsgMintNFT simulates a mint of an NFT
 func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -155,6 +175,16 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			simAccount.PrivKey,
+		)
 
 		ctx, _ = ctx.CacheContext()
 		_, err := handler(ctx, msg)

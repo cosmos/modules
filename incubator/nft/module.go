@@ -162,6 +162,6 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 }
 
 // WeightedOperations doesn't return any operation for the nft module.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
 	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.keeper)
 }
