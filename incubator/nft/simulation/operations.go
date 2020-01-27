@@ -170,6 +170,7 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found")
 		}
+		fmt.Println("here")
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
@@ -274,6 +275,7 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 				return simulation.NoOpMsg(types.ModuleName), nil, err
 			}
 		}
+		fmt.Println("here")
 
 		// find the acc in simulated acocunts
 		simAcc, ok := simulation.FindAccount(accs, ownerAddr)
