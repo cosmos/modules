@@ -187,7 +187,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
+		simapp.SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
