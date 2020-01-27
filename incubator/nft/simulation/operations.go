@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/modules/incubator/nft"
 	"github.com/cosmos/modules/incubator/nft/internal/keeper"
 	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
@@ -21,7 +20,7 @@ const (
 	OpWeightedMsgBurnNFT         = "op_weighted_msg_burn_nft"
 )
 
-func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keeper.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, k keeper.Keeper) simulation.WeightedOperations {
 
 	var (
 		weightedMsgTransferNFT     int
@@ -54,25 +53,25 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keep
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightedMsgTransferNFT,
-			SimulateMsgTransferNFT(k),
+			SimulateMsgTransferNFT(ak, k),
 		),
 		simulation.NewWeightedOperation(
 			weightedMsgEditNFTMetadata,
-			SimulateMsgEditNFTMetadata(k),
+			SimulateMsgEditNFTMetadata(ak, k),
 		),
 		simulation.NewWeightedOperation(
 			weightedMsgMintNFT,
-			SimulateMsgMintNFT(k),
+			SimulateMsgMintNFT(ak, k),
 		),
 		simulation.NewWeightedOperation(
 			weightedMsgBurnNFT,
-			SimulateMsgBurnNFT(k),
+			SimulateMsgBurnNFT(ak, k),
 		),
 	}
 }
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
-func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
+func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -115,8 +114,7 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 }
 
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
-func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -125,6 +123,7 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
+		acc := ak.GetAccount(ctx, ownerAddr)
 
 		msg := types.NewMsgEditNFTMetadata(
 			ownerAddr,
@@ -142,8 +141,8 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{ownerAddr.GetAccountNumber()},
-			[]uint64{ownerAddr.GetSequence()},
+			[]uint64{acc.GetAccountNumber()},
+			[]uint64{acc.GetSequence()},
 			simAccount.PrivKey,
 		)
 
@@ -157,7 +156,7 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 }
 
 // SimulateMsgMintNFT simulates a mint of an NFT
-func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
+func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -186,8 +185,7 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 			simAccount.PrivKey,
 		)
 
-		ctx, _ = ctx.CacheContext()
-		_, err := handler(ctx, msg)
+		_, _, err = app.Deliver(tx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -197,8 +195,7 @@ func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
 }
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
-func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -213,8 +210,7 @@ func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
-		ctx, _ = ctx.CacheContext()
-		_, err := handler(ctx, msg)
+		_, _, err = app.Deliver(tx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}

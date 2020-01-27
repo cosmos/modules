@@ -18,7 +18,8 @@ import (
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/incubator/nft/client/cli"
 	"github.com/cosmos/modules/incubator/nft/client/rest"
-	"github.com/cosmos/modules/incubator/nft/simulation"
+	"github.com/cosmos/modules/incubator/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/simulationypes"
 )
 
 var (
@@ -79,13 +80,18 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper Keeper
+
+	// Account keeper is used for testing purposes only
+	accountKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
+
+		keeper: keeper,
+		accountKeeper:  accountKeeper,
 	}
 }
 
@@ -163,5 +169,5 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 
 // WeightedOperations doesn't return any operation for the nft module.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.keeper)
+	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.AccountKeeper, am.keeper)
 }
