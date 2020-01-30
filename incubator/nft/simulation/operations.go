@@ -38,7 +38,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 	appParams.GetOrGenerate(cdc, OpWeightedMsgEditNFTMetadata, &weightedMsgEditNFTMetadata, nil,
 		func(_ *rand.Rand) {
-			weightedMsgEditNFTMetadata = 67
+			weightedMsgEditNFTMetadata = 100
 		},
 	)
 	appParams.GetOrGenerate(cdc, OpWeightedMsgMintNFT, &weightedMsgMintNFT, nil,
@@ -166,7 +166,7 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		// find the acc in simulated acocunts
-		simAcc, ok := simulation.FindAccount(accs, ownerAddr)
+		simAcc, ok := simulation.FindAccount(accs, acc.GetAddress())
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found")
 		}
@@ -275,12 +275,11 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 				return simulation.NoOpMsg(types.ModuleName), nil, err
 			}
 		}
-		fmt.Println("here")
 
 		// find the acc in simulated acocunts
 		simAcc, ok := simulation.FindAccount(accs, ownerAddr)
 		if !ok {
-			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found")
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("account not found, burnMsg")
 		}
 
 		tx := helpers.GenTx(
