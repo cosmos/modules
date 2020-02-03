@@ -5,8 +5,8 @@ import (
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,17 +15,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
-	"github.com/cosmos/modules/incubator/poa"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/modules/incubator/poa"
 )
 
 const appName = "SimApp"
@@ -56,19 +59,22 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:     nil,
-		distr.ModuleName:          nil,
-		mint.ModuleName:           {supply.Minter},
-		gov.ModuleName:            {supply.Burner},
+		auth.FeeCollectorName: nil,
+		distr.ModuleName:      nil,
+		mint.ModuleName:       {supply.Minter},
+		gov.ModuleName:        {supply.Burner},
 	}
 )
 
 // custom tx codec
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
+
 	ModuleBasics.RegisterCodec(cdc)
+	vesting.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
+
 	return cdc
 }
 
@@ -85,18 +91,20 @@ type SimApp struct {
 	keys  map[string]*sdk.KVStoreKey
 	tkeys map[string]*sdk.TransientStoreKey
 
+	// subspaces
+	subspaces map[string]params.Subspace
+
 	// keepers
 	AccountKeeper  auth.AccountKeeper
 	BankKeeper     bank.Keeper
 	SupplyKeeper   supply.Keeper
-	POAKeeper  poa.Keeper
+	POAKeeper      poa.Keeper
 	SlashingKeeper slashing.Keeper
 	MintKeeper     mint.Keeper
 	DistrKeeper    distr.Keeper
 	GovKeeper      gov.Keeper
 	CrisisKeeper   crisis.Keeper
 	ParamsKeeper   params.Keeper
-	NFTKeeper      nft.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -118,7 +126,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, poa.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, nft.StoreKey)
+		gov.StoreKey, params.StoreKey)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
 	app := &SimApp{
@@ -127,43 +135,83 @@ func NewSimApp(
 		invCheckPeriod: invCheckPeriod,
 		keys:           keys,
 		tkeys:          tkeys,
+		subspaces:      make(map[string]params.Subspace),
 	}
 
 	// init params keeper and subspaces
-	app.ParamsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tkeys[params.TStoreKey], params.DefaultCodespace)
-	authSubspace := app.ParamsKeeper.Subspace(auth.DefaultParamspace)
-	bankSubspace := app.ParamsKeeper.Subspace(bank.DefaultParamspace)
-	poaSubspace := app.ParamsKeeper.Subspace(poa.DefaultParamspace)
-	mintSubspace := app.ParamsKeeper.Subspace(mint.DefaultParamspace)
-	distrSubspace := app.ParamsKeeper.Subspace(distr.DefaultParamspace)
-	slashingSubspace := app.ParamsKeeper.Subspace(slashing.DefaultParamspace)
-	govSubspace := app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
-	crisisSubspace := app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
+	app.ParamsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tkeys[params.TStoreKey])
+	app.subspaces[bank.ModuleName] = app.ParamsKeeper.Subspace(bank.DefaultParamspace)
+	app.subspaces[poa.ModuleName] = app.ParamsKeeper.Subspace(poa.DefaultParamspace)
+	app.subspaces[mint.ModuleName] = app.ParamsKeeper.Subspace(mint.DefaultParamspace)
+	app.subspaces[distr.ModuleName] = app.ParamsKeeper.Subspace(distr.DefaultParamspace)
+	app.subspaces[slashing.ModuleName] = app.ParamsKeeper.Subspace(slashing.DefaultParamspace)
+	app.subspaces[gov.ModuleName] = app.ParamsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
+	app.subspaces[crisis.ModuleName] = app.ParamsKeeper.Subspace(crisis.DefaultParamspace)
 
 	// add keepers
-	app.AccountKeeper = auth.NewAccountKeeper(app.cdc, keys[auth.StoreKey], authSubspace, auth.ProtoBaseAccount)
-	app.BankKeeper = bank.NewBaseKeeper(app.AccountKeeper, bankSubspace, bank.DefaultCodespace, app.ModuleAccountAddrs())
-	app.SupplyKeeper = supply.NewKeeper(app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms)
-	PoaKeeper := poa.NewKeeper(app.cdc, keys[poa.StoreKey],
-		app.SupplyKeeper, stakingSubspace, poa.DefaultCodespace)
-	app.MintKeeper = mint.NewKeeper(app.cdc, keys[mint.StoreKey], mintSubspace, &PoaKeeper, app.SupplyKeeper, auth.FeeCollectorName)
-	app.DistrKeeper = distr.NewKeeper(app.cdc, keys[distr.StoreKey], distrSubspace, &PoaKeeper,
-		app.SupplyKeeper, distr.DefaultCodespace, auth.FeeCollectorName, app.ModuleAccountAddrs())
-	app.SlashingKeeper = slashing.NewKeeper(app.cdc, keys[slashing.StoreKey], &PoaKeeper,
-		slashingSubspace, slashing.DefaultCodespace)
-	app.CrisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName)
+	app.AccountKeeper = auth.NewAccountKeeper(
+		app.cdc,
+		keys[auth.StoreKey],
+		app.subspaces[auth.ModuleName],
+		auth.ProtoBaseAccount,
+	)
+
+	app.BankKeeper = bank.NewBaseKeeper(
+		app.AccountKeeper,
+		app.subspaces[bank.ModuleName],
+		app.ModuleAccountAddrs())
+
+	app.SupplyKeeper = supply.NewKeeper(
+		app.cdc,
+		keys[supply.StoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
+		maccPerms)
+
+	poaKeeper := poa.NewKeeper(
+		app.cdc,
+		keys[poa.StoreKey],
+		app.SupplyKeeper,
+		app.subspaces[poa.ModuleName])
+
+	app.MintKeeper = mint.NewKeeper(
+		app.cdc, keys[mint.StoreKey],
+		app.subspaces[mint.ModuleName],
+		&poaKeeper,
+		app.SupplyKeeper,
+		auth.FeeCollectorName)
+
+	app.DistrKeeper = distr.NewKeeper(
+		app.cdc,
+		keys[distr.StoreKey], app.subspaces[distr.ModuleName],
+		&poaKeeper,
+		app.SupplyKeeper,
+		auth.FeeCollectorName,
+		app.ModuleAccountAddrs())
+
+	app.SlashingKeeper = slashing.NewKeeper(
+		app.cdc,
+		keys[slashing.StoreKey],
+		&poaKeeper,
+		app.subspaces[slashing.ModuleName])
+
+	app.CrisisKeeper = crisis.NewKeeper(
+		app.subspaces[crisis.ModuleName],
+		invCheckPeriod,
+		app.SupplyKeeper,
+		auth.FeeCollectorName)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
 		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper))
-	app.GovKeeper = gov.NewKeeper(app.cdc, keys[gov.StoreKey], govSubspace,
-		app.SupplyKeeper, &PoaKeeper, gov.DefaultCodespace, govRouter)
+	app.GovKeeper = gov.NewKeeper(app.cdc, keys[gov.StoreKey], app.subspaces[gov.ModuleName],
+		app.SupplyKeeper, &poaKeeper, govRouter)
 
 	// register the staking hooks
 	// NOTE: PoaKeeper above is passed by reference, so that it will contain these hooks
-	app.PoaKeeper = *PoaKeeper.SetHooks(
+	app.PoaKeeper = *poaKeeper.SetHooks(
 		poa.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
@@ -175,10 +223,10 @@ func NewSimApp(
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
 		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
-		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
+		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
-		slashing.NewAppModule(app.SlashingKeeper, app.POAKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper, app.POAKeeper),
+		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.POAKeeper),
 		poa.NewAppModule(app.POAKeeper, app.AccountKeeper, app.SupplyKeeper),
 	)
 
@@ -208,13 +256,13 @@ func NewSimApp(
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(app.AccountKeeper),
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
-		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
-		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
+		supply.NewAppModule(app.SupplyKeeper, app.BankKeeper, app.AccountKeeper),
+		gov.NewAppModule(app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
-		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-		// nft.NewAppModule(app.NFTKeeper),
+		poa.NewAppModule(app.POAKeeper, app.AccountKeeper, app.SupplyKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.SupplyKeeper, app.StakingKeeper),
+		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		params.NewAppModule(), // NOTE: only used for simulation to generate randomized param change proposals
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -232,7 +280,7 @@ func NewSimApp(
 	if loadLatest {
 		err := app.LoadLatestVersion(app.keys[bam.MainStoreKey])
 		if err != nil {
-			cmn.Exit(err.Error())
+			tmos.Exit(err.Error())
 		}
 	}
 	return app

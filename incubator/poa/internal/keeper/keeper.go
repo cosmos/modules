@@ -26,14 +26,11 @@ type Keeper struct {
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
 	validatorCacheList *list.List
-
-	// codespace
-	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, supplyKeeper types.SupplyKeeper,
-	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
+	paramstore params.Subspace) Keeper {
 
 	return Keeper{
 		storeKey:           key,
@@ -43,7 +40,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, supplyKeeper types.SupplyKeep
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
-		codespace:          codespace,
 	}
 }
 
@@ -59,11 +55,6 @@ func (k *Keeper) SetHooks(sh types.POAHooks) *Keeper {
 	}
 	k.hooks = sh
 	return k
-}
-
-// return the codespace
-func (k Keeper) Codespace() sdk.CodespaceType {
-	return k.codespace
 }
 
 // Load the last total validator power.

@@ -12,11 +12,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=NameService \
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: lint install
-
-install: go.sum
-		go install -mod=readonly $(BUILD_FLAGS) ./cmd/nsd
-		go install -mod=readonly $(BUILD_FLAGS) ./cmd/nscli
+all: lint test
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"

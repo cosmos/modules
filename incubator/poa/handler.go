@@ -1,18 +1,17 @@
 package poa
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/common"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
@@ -23,8 +22,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgEditValidator(ctx, msg, k)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized staking message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
@@ -51,26 +49,26 @@ func EndBlocker(ctx sdk.Context, k Keeper) []abci.ValidatorUpdate {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper) sdk.Result {
+func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper) (*sdk.Result, error) {
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
-		return stakingtypes.ErrValidatorOwnerExists(k.Codespace()).Result()
+		return nil, stakingtypes.ErrValidatorOwnerExists
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
-		return stakingtypes.ErrValidatorPubKeyExists(k.Codespace()).Result()
+		return nil, stakingtypes.ErrValidatorPubKeyExists
 	}
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
-		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return stakingtypes.ErrValidatorPubKeyTypeNotSupported(k.Codespace(),
-				tmPubKey.Type,
-				ctx.ConsensusParams().Validator.PubKeyTypes).Result()
+		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+			return nil, sdkerrors.Wrap(stakingtypes.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, valid: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
+			)
 		}
 	}
 
@@ -97,17 +95,17 @@ func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper)
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) sdk.Result {
+func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) (*sdk.Result, error) {
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
-		return stakingtypes.ErrNoValidatorFound(k.Codespace()).Result()
+		return nil, stakingtypes.ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
 	description, err := validator.Description.UpdateDescription(msg.Description)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	validator.Description = description

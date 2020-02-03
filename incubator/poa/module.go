@@ -17,16 +17,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/modules/incubator/poa/client/cli"
-	"github.com/cosmos/modules/incubator/poa/client/rest"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	"github.com/cosmos/modules/incubator/poa/client/cli"
+	"github.com/cosmos/modules/incubator/poa/client/rest"
 )
 
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.
@@ -94,26 +94,6 @@ func (AppModuleBasic) PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeI
 func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 	txBldr authtypes.TxBuilder) (authtypes.TxBuilder, sdk.Msg, error) {
 	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
-}
-
-//____________________________________________________________________________
-
-// AppModuleSimulation defines the module simulation functions used by the gov module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder registers a decoder for nft module's types
-func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
-}
-
-// GenerateGenesisState creates a randomized GenState of the nft module.
-func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RandomizedParams doesn't create randomized nft param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
 }
 
 //____________________________________________________________________________
@@ -195,4 +175,33 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
+}
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the staking module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams creates randomized staking param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(r)
+}
+
+// RegisterStoreDecoder registers a decoder for staking module's types
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// WeightedOperations returns the all the staking module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }
