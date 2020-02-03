@@ -27,25 +27,6 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k Keeper) []abci.ValidatorUpdate {
-	// Calculate validator set changes.
-	//
-	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
-	// UnbondAllMatureValidatorQueue.
-	// This fixes a bug when the unbonding period is instant (is the case in
-	// some of the tests). The test expected the validator to be completely
-	// unbonded after the Endblocker (go from Bonded -> Unbonding during
-	// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
-	// UnbondAllMatureValidatorQueue).
-	validatorUpdates := k.ApplyAndReturnValidatorSetUpdates(ctx)
-
-	// Unbond all mature validators from the unbonding queue.
-	k.UnbondAllMatureValidatorQueue(ctx)
-
-	return validatorUpdates
-}
-
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
@@ -66,7 +47,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper)
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
 		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return nil, sdkerrors.Wrap(stakingtypes.ErrValidatorPubKeyTypeNotSupported,
+			return nil, sdkerrors.Wrapf(stakingtypes.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, valid: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
 			)
 		}
@@ -92,7 +73,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg MsgCreateValidator, k Keeper)
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) (*sdk.Result, error) {
@@ -120,5 +101,5 @@ func handleMsgEditValidator(ctx sdk.Context, msg MsgEditValidator, k Keeper) (*s
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }

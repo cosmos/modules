@@ -2,12 +2,11 @@ package poa
 
 // TODO make proposal for creating validator and increasing weight
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tendermint/tendermint/libs/common"
+	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -19,8 +18,7 @@ func NewPOAProposalHandler(k Keeper) govtypes.Handler {
 			return handleMsgProposeCreateValidator(ctx, k, c)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized poa proposal content type: %T", c)
-			return sdk.ErrUnknownRequest(errMsg)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized poa proposal content type: %T", c)
 		}
 	}
 }
@@ -29,11 +27,11 @@ func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCrea
 	val := c.Validator
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, val.ValidatorAddress); found {
-		return stakingtypes.ErrValidatorOwnerExists(k.Codespace())
+		return stakingtypes.ErrValidatorOwnerExists
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val.PubKey)); found {
-		return stakingtypes.ErrValidatorPubKeyExists(k.Codespace())
+		return stakingtypes.ErrValidatorPubKeyExists
 	}
 
 	if _, err := val.Description.EnsureLength(); err != nil {
@@ -42,10 +40,10 @@ func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCrea
 
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(val.PubKey)
-		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return stakingtypes.ErrValidatorPubKeyTypeNotSupported(k.Codespace(),
-				tmPubKey.Type,
-				ctx.ConsensusParams().Validator.PubKeyTypes)
+		if !tmstrings.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+			return sdkerrors.Wrapf(stakingtypes.ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, valid: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
+			)
 		}
 	}
 

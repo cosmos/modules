@@ -57,7 +57,7 @@ func createValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		pk, err := sdk.GetConsPubKeyBech32(req.Pubkey)
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msgCreateValJSON.PubKey)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

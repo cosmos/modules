@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -50,7 +51,7 @@ func MakeTestCodec() *codec.Codec {
 	cdc.RegisterConcrete(types.MsgEditValidator{}, "test/poa/EditValidator", nil)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterInterface((*authexported.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/poa/BaseAccount", nil)
 	supply.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
@@ -93,7 +94,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 	blacklistedAddrs := make(map[string]bool)
 	blacklistedAddrs[feeCollectorAcc.GetAddress().String()] = true
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 
 	accountKeeper := auth.NewAccountKeeper(
 		cdc,    // amino codec
@@ -105,7 +106,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 	bk := bank.NewBaseKeeper(
 		accountKeeper,
 		pk.Subspace(bank.DefaultParamspace),
-		bank.DefaultCodespace,
+		pk.Subspace(bank.DefaultParamspace),
 		blacklistedAddrs,
 	)
 

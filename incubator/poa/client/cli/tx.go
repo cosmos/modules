@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -13,10 +14,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/modules/incubator/poa/internal/types"
 )
@@ -31,7 +34,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	poaTxCmd.AddCommand(client.PostCommands(
+	poaTxCmd.AddCommand(flags.PostCommands(
 		GetCmdCreateValidator(cdc),
 		GetCmdEditValidator(cdc),
 		// GetCmdUnbond(storeKey, cdc),
@@ -46,8 +49,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a weight of 10",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
@@ -61,10 +65,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(FsPk)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 
-	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", client.FlagGenerateOnly))
+	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 
-	cmd.MarkFlagRequired(client.FlagFrom)
+	cmd.MarkFlagRequired(flags.FlagFrom)
 	cmd.MarkFlagRequired(FlagPubKey)
 	cmd.MarkFlagRequired(FlagMoniker)
 
@@ -78,8 +82,9 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 		Use:   "edit-validator",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := stakingtypes.NewDescription(
@@ -174,11 +179,11 @@ func PrepareFlagsForTxCreateValidator(
 	details := viper.GetString(FlagDetails)
 	identity := viper.GetString(FlagIdentity)
 
-	viper.Set(client.FlagChainID, chainID)
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))
+	viper.Set(flags.FlagChainID, chainID)
+	viper.Set(flags.FlagFrom, viper.GetString(flags.FlagName))
 	viper.Set(FlagNodeID, nodeID)
 	viper.Set(FlagIP, ip)
-	viper.Set(FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey))
+	viper.Set(FlagPubKey, sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, valPubKey))
 	viper.Set(FlagMoniker, config.Moniker)
 	viper.Set(FlagWebsite, website)
 	viper.Set(FlagSecurityContact, securityContact)
@@ -186,7 +191,7 @@ func PrepareFlagsForTxCreateValidator(
 	viper.Set(FlagIdentity, identity)
 
 	if config.Moniker == "" {
-		viper.Set(FlagMoniker, viper.GetString(client.FlagName))
+		viper.Set(FlagMoniker, viper.GetString(flags.FlagName))
 	}
 }
 
@@ -196,7 +201,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (
 	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
 
-	pk, err := sdk.GetConsPubKeyBech32(pkStr)
+	pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pkStr)
 	if err != nil {
 		return txBldr, nil, err
 	}

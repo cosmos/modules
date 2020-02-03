@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -20,18 +21,23 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+)
+
+const (
+	flagClientHome = "home-client"
 )
 
 // StakingMsgBuildingHelpers helpers for message building gen-tx command
@@ -47,7 +53,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 	genAccIterator types.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 
 	ipDefault, _ := server.ExternalIP()
-	fsCreateValidator, flagNodeID, flagPubKey, flagAmount, defaultsDesc := pmbh.CreateValidatorMsgHelpers(ipDefault)
+	fsCreateValidator, flagNodeID, flagPubKey, _, defaultsDesc := pmbh.CreateValidatorMsgHelpers(ipDefault)
 
 	cmd := &cobra.Command{
 		Use:   "gentx",
@@ -62,7 +68,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			config := ctx.Config
-			config.SetRoot(viper.GetString(client.FlagHome))
+			config.SetRoot(viper.GetString(flags.FlagHome))
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(ctx.Config)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
@@ -74,7 +80,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 			}
 			// Read --pubkey, if empty take it from priv_validator.json
 			if valPubKeyString := viper.GetString(flagPubKey); valPubKeyString != "" {
-				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
+				valPubKey, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, valPubKeyString)
 				if err != nil {
 					return errors.Wrap(err, "failed to get consensus node public key")
 				}
@@ -94,35 +100,37 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			kb, err := keys.NewKeyring(sdk.KeyringServiceName(),
+				viper.GetString(flags.FlagKeyringBackend), viper.GetString(flagClientHome), inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
 
-			name := viper.GetString(client.FlagName)
+			name := viper.GetString(flags.FlagName)
 			key, err := kb.Get(name)
 			if err != nil {
 				return errors.Wrap(err, "failed to read from keybase")
 			}
 
 			// Set flags for creating gentx
-			viper.Set(client.FlagHome, viper.GetString(flagClientHome))
+			viper.Set(flags.FlagHome, viper.GetString(flagClientHome))
 			pmbh.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
 
-			err = genutil.ValidateAccountInGenesis(genesisState, genAccIterator, key.GetAddress(), coins, cdc)
+			err = ValidateAccountInGenesis(genesisState, genAccIterator, key.GetAddress(), cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := client.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
 			//
 			// TODO: Consider removing the manual setting of generate-only in
 			// favor of a 'gentx' flag in the create-validator command.
-			viper.Set(client.FlagGenerateOnly, true)
+			viper.Set(flags.FlagGenerateOnly, true)
 
 			// create a 'create-validator' message
 			txBldr, msg, err := pmbh.BuildCreateValidatorMsg(cliCtx, txBldr)
@@ -161,7 +169,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 			}
 
 			// Fetch output file name
-			outputDocument := viper.GetString(client.FlagOutputDocument)
+			outputDocument := viper.GetString(flags.FlagOutputDocument)
 			if outputDocument == "" {
 				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
 				if err != nil {
@@ -179,14 +187,14 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, pm
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, defaultNodeHome, "node's home directory")
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, defaultCLIHome, "client's home directory")
-	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
-	cmd.Flags().String(client.FlagOutputDocument, "",
+	cmd.Flags().String(flags.FlagName, "", "name of private key with which to sign the gentx")
+	cmd.Flags().String(flags.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 
-	cmd.MarkFlagRequired(client.FlagName)
+	cmd.MarkFlagRequired(flags.FlagName)
 	return cmd
 }
 
