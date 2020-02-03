@@ -65,7 +65,7 @@ func (mpc MsgProposeCreateValidator) String() string {
 
 // ValidateBasic validates the Creation of a validator proposal
 func (mpc MsgProposeCreateValidator) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpc)
+	err := govtypes.ValidateAbstract(mpc)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (mpi MsgProposeIncreaseWeight) String() string {
 
 // ValidateBasic validates the Creation of a validator proposal
 func (mpi MsgProposeIncreaseWeight) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpi)
+	err := govtypes.ValidateAbstract(mpi)
 	if err != nil {
 		return err
 	}

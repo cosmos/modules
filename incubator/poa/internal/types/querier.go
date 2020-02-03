@@ -6,9 +6,10 @@ import (
 
 // query endpoints supported by the staking Querier
 const (
-	QueryValidators = "validators"
-	QueryValidator  = "validator"
-	QueryParameters = "parameters"
+	QueryValidators     = "validators"
+	QueryValidator      = "validator"
+	QueryParameters     = "parameters"
+	QueryHistoricalInfo = "historicalInfo"
 )
 
 // defines the params for the following queries:
@@ -32,4 +33,15 @@ type QueryValidatorsParams struct {
 
 func NewQueryValidatorsParams(page, limit int, status string) QueryValidatorsParams {
 	return QueryValidatorsParams{page, limit, status}
+}
+
+// QueryHistoricalInfoParams defines the params for the following queries:
+// - 'custom/staking/historicalInfo'
+type QueryHistoricalInfoParams struct {
+	Height int64
+}
+
+// NewQueryHistoricalInfoParams creates a new QueryHistoricalInfoParams instance
+func NewQueryHistoricalInfoParams(height int64) QueryHistoricalInfoParams {
+	return QueryHistoricalInfoParams{height}
 }

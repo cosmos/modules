@@ -46,7 +46,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description sta
 func (v Validator) MarshalYAML() (interface{}, error) {
 	bs, err := yaml.Marshal(bechValidator{
 		OperatorAddress:         v.OperatorAddress,
-		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
+		ConsPubKey:              sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey),
 		Jailed:                  v.Jailed,
 		Status:                  v.Status,
 		Weight:                  v.Weight,
@@ -63,7 +63,7 @@ func (v Validator) MarshalYAML() (interface{}, error) {
 
 // String returns a human readable string representation of a validator.
 func (v Validator) String() string {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
+	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +114,7 @@ type bechValidator struct {
 
 // MarshalJSON marshals the validator to JSON using Bech32
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
+	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
-	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
+	consPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, bv.ConsPubKey)
 	if err != nil {
 		return err
 	}
@@ -255,6 +255,23 @@ func (v Validators) String() (out string) {
 		out += val.String() + "\n"
 	}
 	return strings.TrimSpace(out)
+}
+
+// Implements sort interface
+func (v Validators) Len() int {
+	return len(v)
+}
+
+// Implements sort interface
+func (v Validators) Less(i, j int) bool {
+	return bytes.Compare(v[i].OperatorAddress, v[j].OperatorAddress) == -1
+}
+
+// Implements sort interface
+func (v Validators) Swap(i, j int) {
+	it := v[i]
+	v[i] = v[j]
+	v[j] = it
 }
 
 // func (v Validators) ToSDKValidators()

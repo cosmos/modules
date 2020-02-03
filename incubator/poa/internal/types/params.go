@@ -26,6 +26,10 @@ const (
 
 	// Default to not allow validators to increase there weight
 	DefaultIncreaseWeight bool = false
+
+	// DefaultHistorical entries is 0 since it must only be non-zero for
+	// IBC connected chains
+	DefaultHistoricalEntries uint16 = 0
 )
 
 // nolint - Keys for parameter access
@@ -35,6 +39,7 @@ var (
 	KeyMaxEntries          = []byte("KeyMaxEntries")
 	KeyAcceptAllValidators = []byte("KeyAcceptAllValidators")
 	KeyIncreaseWeight      = []byte("KeyIncreaseWeight")
+	KeyHistoricalEntries   = []byte("HistoricalEntries")
 )
 
 var _ params.ParamSet = (*Params)(nil)
@@ -44,18 +49,20 @@ type Params struct {
 	UnbondingTime       time.Duration `json:"unbonding_time" yaml:"unbonding_time"`               // time duration of unbonding
 	MaxValidators       uint16        `json:"max_validators" yaml:"max_validators"`               // maximum number of validators (max uint16 = 65535)
 	MaxEntries          uint16        `json:"max_entries" yaml:"max_entries"`                     // max entries for either unbonding delegation or redelegation (per pair/trio)
+	HistoricalEntries   uint16        `json:"historical_entries" yaml:"historical_entries"`       // number of historical entries to persist
 	AcceptAllValidators bool          `json:"accept_all_validators" yaml:"accept_all_validators"` // Sets the value if a network wants to accept all applicants to be validators
 	IncreaseWeight      bool          `json:"increase_weight" yaml:"increase_weight"`             // Disallow validators to increase there power
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint16,
 	acceptAllValidators, increaseWeight bool) Params {
 
 	return Params{
 		UnbondingTime:       unbondingTime,
 		MaxValidators:       maxValidators,
 		MaxEntries:          maxEntries,
+		HistoricalEntries:   historicalEntries,
 		AcceptAllValidators: acceptAllValidators,
 		IncreaseWeight:      increaseWeight,
 	}
@@ -64,11 +71,12 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		{Key: KeyUnbondingTime, Value: &p.UnbondingTime},
-		{Key: KeyMaxValidators, Value: &p.MaxValidators},
-		{Key: KeyMaxEntries, Value: &p.MaxEntries},
-		{Key: KeyAcceptAllValidators, Value: &p.AcceptAllValidators},
-		{Key: KeyIncreaseWeight, Value: &p.IncreaseWeight},
+		params.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
+		params.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
+		params.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
+		params.NewParamSetPair(KeyAcceptAllValidators, &p.AcceptAllValidators, validateAcceptAllValidators),
+		params.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
+		params.NewParamSetPair(KeyIncreaseWeight, &p.IncreaseWeight, validateKeyIncreaseWeight),
 	}
 }
 
@@ -82,7 +90,7 @@ func (p Params) Equal(p2 Params) bool {
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, DefaultAcceptAllValidators, DefaultIncreaseWeight)
+	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, DefaultHistoricalEntries, DefaultAcceptAllValidators, DefaultIncreaseWeight)
 }
 
 // String returns a human readable string representation of the parameters.
@@ -115,8 +123,80 @@ func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) 
 
 // validate a set of params
 func (p Params) Validate() error {
-	if p.MaxValidators == 0 {
-		return fmt.Errorf("staking parameter MaxValidators must be a positive integer")
+	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
+		return err
 	}
+	if err := validateMaxValidators(p.MaxValidators); err != nil {
+		return err
+	}
+	if err := validateMaxEntries(p.MaxEntries); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateUnbondingTime(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v <= 0 {
+		return fmt.Errorf("unbonding time must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMaxValidators(i interface{}) error {
+	v, ok := i.(uint16)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max validators must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMaxEntries(i interface{}) error {
+	v, ok := i.(uint16)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max entries must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateHistoricalEntries(i interface{}) error {
+	_, ok := i.(uint16)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateAcceptAllValidators(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateKeyIncreaseWeight(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	return nil
 }

@@ -22,11 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/modules/incubator/poa"
 )
@@ -209,7 +207,7 @@ func NewSimApp(
 	app.GovKeeper = gov.NewKeeper(app.cdc, keys[gov.StoreKey], app.subspaces[gov.ModuleName],
 		app.SupplyKeeper, &poaKeeper, govRouter)
 
-	// register the staking hooks
+	// register the poa hooks
 	// NOTE: PoaKeeper above is passed by reference, so that it will contain these hooks
 	app.PoaKeeper = *poaKeeper.SetHooks(
 		poa.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
@@ -235,14 +233,14 @@ func NewSimApp(
 	// CanWithdrawInvariant invariant.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 
-	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
+	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, poa.ModuleName)
 
-	// NOTE: The genutils moodule must occur after staking so that pools are
+	// NOTE: The genutils moodule must occur after poa so that pools are
 	// properly initialized with tokens from genesis accounts.
 	app.mm.SetOrderInitGenesis(
-		auth.ModuleName, distr.ModuleName, staking.ModuleName,
+		auth.ModuleName, distr.ModuleName, poa.ModuleName,
 		bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, nft.ModuleName,
+		mint.ModuleName, supply.ModuleName, crisis.ModuleNameå,
 		genutil.ModuleName,
 	)
 
