@@ -1,10 +1,9 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
-
-	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -57,18 +56,18 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 			weightedMsgTransferNFT,
 			SimulateMsgTransferNFT(ak, k),
 		),
-		simulation.NewWeightedOperation(
-			weightedMsgEditNFTMetadata,
-			SimulateMsgEditNFTMetadata(ak, k),
-		),
-		simulation.NewWeightedOperation(
-			weightedMsgMintNFT,
-			SimulateMsgMintNFT(ak, k),
-		),
-		simulation.NewWeightedOperation(
-			weightedMsgBurnNFT,
-			SimulateMsgBurnNFT(ak, k),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightedMsgEditNFTMetadata,
+		// 	SimulateMsgEditNFTMetadata(ak, k),
+		// ),
+		// simulation.NewWeightedOperation(
+		// 	weightedMsgMintNFT,
+		// 	SimulateMsgMintNFT(ak, k),
+		// ),
+		// simulation.NewWeightedOperation(
+		// 	weightedMsgBurnNFT,
+		// 	SimulateMsgBurnNFT(ak, k),
+		// ),
 	}
 }
 
@@ -77,12 +76,12 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
-
-		simAccount, _ := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgTransferNFT(
 			ownerAddr,          // sender
 			simAccount.Address, // recipient
@@ -109,6 +108,11 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			}
 		}
 
+		ownerAcc, ok := simulation.FindAccount(accs, ownerAddr)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("could not find acc")
+		}
+
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
@@ -116,7 +120,7 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			chainID,
 			[]uint64{acc.GetAccountNumber()},
 			[]uint64{acc.GetSequence()},
-			simAccount.PrivKey,
+			ownerAcc.PrivKey,
 		)
 
 		_, _, err = app.Deliver(tx)
