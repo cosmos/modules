@@ -8,8 +8,8 @@ import (
 type NFT interface {
 	GetID() string
 	GetOwner() sdk.AccAddress
-	SetOwner(address sdk.AccAddress) NFT
+	SetOwner(address sdk.AccAddress)
 	GetTokenURI() string
-	EditMetadata(tokenURI string) NFT
+	EditMetadata(tokenURI string)
 	String() string
 }

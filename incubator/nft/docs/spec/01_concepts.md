@@ -9,9 +9,9 @@ The `NFT` Interface inherits the BaseNFT struct and includes getter functions fo
 type NFT interface {
   GetID() string                    // unique identifier of the NFT
   GetOwner() sdk.AccAddress         // gets owner account of the NFT
-  SetOwner(address sdk.AccAddress) BaseNFT // gets owner account of the NFT
+  SetOwner(address sdk.AccAddress)  // gets owner account of the NFT
   GetTokenURI() string              // metadata field: URI to retrieve the of chain metadata of the NFT
-  EditMetadata(tokenURI string) BaseNFT     // edit metadata of the NFT
+  EditMetadata(tokenURI string)     // edit metadata of the NFT
   String() string                   // string representation of the NFT object
 }
 ```
