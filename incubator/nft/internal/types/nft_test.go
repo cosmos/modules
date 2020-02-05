@@ -20,10 +20,10 @@ func TestBaseNFTGetMethods(t *testing.T) {
 func TestBaseNFTSetMethods(t *testing.T) {
 	testNFT := NewBaseNFT(id, address, tokenURI)
 
-	testNFT.SetOwner(address2)
+	testNFT = testNFT.SetOwner(address2)
 	require.Equal(t, address2, testNFT.GetOwner())
 
-	testNFT.EditMetadata(tokenURI2)
+	testNFT = testNFT.EditMetadata(tokenURI2)
 	require.Equal(t, tokenURI2, testNFT.GetTokenURI())
 }
 

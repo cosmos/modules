@@ -35,16 +35,18 @@ func (bnft BaseNFT) GetID() string { return bnft.ID }
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
 
 // SetOwner updates the owner address of the NFT
-func (bnft *BaseNFT) SetOwner(address sdk.AccAddress) {
+func (bnft BaseNFT) SetOwner(address sdk.AccAddress) BaseNFT {
 	bnft.Owner = address
+	return bnft
 }
 
 // GetTokenURI returns the path to optional extra properties
 func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
 
 // EditMetadata edits metadata of an nft
-func (bnft *BaseNFT) EditMetadata(tokenURI string) {
+func (bnft BaseNFT) EditMetadata(tokenURI string) BaseNFT {
 	bnft.TokenURI = tokenURI
+	return bnft
 }
 
 func (bnft BaseNFT) String() string {
