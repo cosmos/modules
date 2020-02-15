@@ -26,14 +26,15 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	faucetTxCmd.AddCommand(flags.PostCommands(
-		GetCmdWithdraw(cdc),
+		GetCmdMint(cdc),
+		GetCmdMintFor(cdc),
 	)...)
 
 	return faucetTxCmd
 }
 
 // GetCmdWithdraw is the CLI command for mining coin
-func GetCmdWithdraw(cdc *codec.Codec) *cobra.Command {
+func GetCmdMint(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "mint",
 		Short: "mint coin to sender address",
@@ -44,7 +45,32 @@ func GetCmdWithdraw(cdc *codec.Codec) *cobra.Command {
 
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgMint(cliCtx.GetFromAddress())
+			msg := types.NewMsgMint(cliCtx.GetFromAddress(), cliCtx.GetFromAddress())
+			err := msg.ValidateBasic()
+			if err != nil {
+				return err
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+}
+
+// GetCmdWithdraw is the CLI command for mining coin
+func GetCmdMintFor(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "mintfor [address]",
+		Short: "mint coin for new address",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			address, _ := sdk.AccAddressFromBech32(args[0])
+
+			msg := types.NewMsgMint(cliCtx.GetFromAddress(), address)
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err

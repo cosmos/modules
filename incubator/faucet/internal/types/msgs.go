@@ -10,12 +10,13 @@ const RouterKey = ModuleName // this was defined in your key.go file
 
 // MsgMint defines a mint message
 type MsgMint struct {
+	Sender sdk.AccAddress
 	Minter sdk.AccAddress
 }
 
 // NewMsgMint is a constructor function for NewMsgMint
-func NewMsgMint(minter sdk.AccAddress) MsgMint {
-	return MsgMint{Minter: minter}
+func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress) MsgMint {
+	return MsgMint{Sender: sender, Minter: minter}
 }
 
 // Route should return the name of the module
@@ -29,6 +30,9 @@ func (msg MsgMint) ValidateBasic() error {
 	if msg.Minter.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Minter.String())
 	}
+	if msg.Sender.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender.String())
+	}
 	return nil
 }
 
@@ -39,5 +43,5 @@ func (msg MsgMint) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgMint) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Minter}
+	return []sdk.AccAddress{msg.Sender}
 }
