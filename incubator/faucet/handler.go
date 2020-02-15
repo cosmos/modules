@@ -9,9 +9,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewHandler returns a handler for "nameservice" type messages.
+// NewHandler returns a handler for "faucet" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		if profile != "testnet" {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Unrecognized faucet Msg type: %v", msg.Type()))
+		}
 		switch msg := msg.(type) {
 		case types.MsgMint:
 			return handleMsgMint(ctx, keeper, msg)
@@ -21,15 +24,14 @@ func NewHandler(keeper Keeper) sdk.Handler {
 	}
 }
 
-// Handle a message to set name
+// Handle a message to Mint
 func handleMsgMint(ctx sdk.Context, keeper Keeper, msg types.MsgMint) (*sdk.Result, error) {
 
-	fmt.Println("hand messages")
-	// to implement later.
-	// if !msg.Owner.Equals(keeper.GetOwner(ctx, msg.Name)) { // Checks if the the msg sender is the same as the current owner
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Incorrect Owner") // If not, throw an error
-	// }
-	// keeper.SetName(ctx, msg.Name, msg.Value) // If so, set the name to the value specified in the msg.
-	keeper.IsPresent(ctx, msg.GetSigners()[0])
+	keeper.Logger(ctx).Info("received mint message: {}", msg)
+	err := keeper.MintAndSend(ctx, msg.Minter)
+	if err != nil {
+		return nil, err
+	}
+
 	return &sdk.Result{}, nil // return
 }

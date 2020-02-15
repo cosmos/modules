@@ -19,23 +19,12 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		case QueryStatus:
 			return queryStatus(ctx, path[1:], req, keeper)
 		default:
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown nameservice query endpoint")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown faucet query endpoint")
 		}
 	}
 }
 
-// nolint: unparam
 func queryStatus(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
-	// value := keeper.ResolveName(ctx, path[0])
-
-	// if value == "" {
-	// 	return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "could not resolve name")
-	// }
-
-	// res, err := codec.MarshalJSONIndent(keeper.cdc, types.QueryResResolve{Value: value})
-	// if err != nil {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	// }
 
 	return nil, nil
 }
