@@ -62,7 +62,7 @@ Step 5: build your app
 make installWithFaucet
 ```
 
-Stop 6: mint some coins
+Step 6.1: mint some coins
 ``` 
 iMac:~ liangping$ nscli tx faucet mint --from ping --chain-id test -y
 {
@@ -89,6 +89,34 @@ iMac:~ liangping$ nscli query account cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskv
 
 ```
 
+Step 6.2: mint some coins for new address.
+
+Since a new address can not send a tx, it's not possible to mint for itself. You have to ask someone to mint for you, then you can mint youself.
+```
+iMac:~ liangping$ nscli tx faucet mintfor cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555 --from ping --chain-id test -y
+{
+  "height": "0",
+  "txhash": "40F2AB8AD75B39532622302A71CB84523847D2E43D36B185E0CE65CE60208AB0",
+  "raw_log": "[]"
+}
+iMac:~ liangping$ nscli query account cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555 --chain-id test
+{
+  "type": "cosmos-sdk/Account",
+  "value": {
+    "address": "cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555",
+    "coins": [
+      {
+        "denom": "stake",
+        "amount": "100000000"
+      }
+    ],
+    "public_key": "",
+    "account_number": 7,
+    "sequence": 0
+  }
+}
+
+```
 
 ## Contact Us
 
