@@ -13,15 +13,25 @@ import (
 type Keeper struct {
 	SupplyKeeper  types.SupplyKeeper
 	StakingKeeper types.StakingKeeper
-	storeKey      sdk.StoreKey // Unexposed key to access store from sdk.Context
-	cdc           *codec.Codec // The wire codec for binary encoding/decoding.
+	amount        int64         // set default amount for each mint.
+	limit         time.Duration // rate limiting for mint, etc 24 * time.Hours
+	storeKey      sdk.StoreKey  // Unexposed key to access store from sdk.Context
+	cdc           *codec.Codec  // The wire codec for binary encoding/decoding.
 }
 
-// NewKeeper creates new instances of the nameservice Keeper
-func NewKeeper(supplyKeeper types.SupplyKeeper, stakingKeeper types.StakingKeeper, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+// NewKeeper creates new instances of the Faucet Keeper
+func NewKeeper(
+	supplyKeeper types.SupplyKeeper,
+	stakingKeeper types.StakingKeeper,
+	amount int64,
+	rateLimit time.Duration,
+	storeKey sdk.StoreKey,
+	cdc *codec.Codec) Keeper {
 	return Keeper{
 		SupplyKeeper:  supplyKeeper,
 		StakingKeeper: stakingKeeper,
+		amount:        amount,
+		limit:         rateLimit,
 		storeKey:      storeKey,
 		cdc:           cdc,
 	}
@@ -32,17 +42,18 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+// MintAndSend mint coins and send to minter.
 func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress) error {
 
 	mining := k.getMining(ctx, minter)
 
 	// refuse mint in 24 hours
-	if k.isPresent(ctx, minter) && mining.LastTime.Add(24*time.Hour).After(time.Now()) {
+	if k.isPresent(ctx, minter) && mining.LastTime.Add(k.limit).After(time.Now()) {
 		return types.ErrWithdrawTooOften
 	}
 
 	denom := k.StakingKeeper.BondDenom(ctx)
-	newCoin := sdk.NewCoin(denom, sdk.NewInt(100*1000000))
+	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.amount))
 	mining.Total = mining.Total.Add(newCoin)
 	k.setMining(ctx, minter, mining)
 
