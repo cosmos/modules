@@ -48,13 +48,14 @@ func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress) error {
 	mining := k.getMining(ctx, minter)
 
 	// refuse mint in 24 hours
-	if k.isPresent(ctx, minter) && mining.LastTime.Add(k.limit).After(time.Now()) {
+	if k.isPresent(ctx, minter) && mining.LastTime.Add(k.limit).UTC().After(time.Now().UTC()) {
 		return types.ErrWithdrawTooOften
 	}
 
 	denom := k.StakingKeeper.BondDenom(ctx)
 	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.amount))
 	mining.Total = mining.Total.Add(newCoin)
+	mining.LastTime = time.Now()
 	k.setMining(ctx, minter, mining)
 
 	k.Logger(ctx).Info("Mint coin: %s", newCoin)

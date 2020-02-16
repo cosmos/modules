@@ -52,7 +52,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 // Get the root tx command of this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	if profile == "testnet" {
+	if profile == TESTNET {
 		return cli.GetTxCmd(StoreKey, cdc)
 	} else {
 		return nil
