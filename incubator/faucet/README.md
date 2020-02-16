@@ -94,6 +94,13 @@ iMac:~ liangping$ nscli query account cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskv
 Step 6.2: mint some coins for new address.
 
 Since a new address can not send a tx, it's not possible to mint for itself. You have to ask someone to mint for you, then you can mint youself.
+
+**Alternative Approach: (Recommended)**
+
+Publish a mnemonic whose corresponding account(Let's call faucet account) has been actived on blockchain, therefore everyone can import this account and use it to mint for his/her new address.
+
+The faucet account don't need have a large amount of tokens in it.
+
 ```
 iMac:~ liangping$ nscli tx faucet mintfor cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555 --from ping --chain-id test -y
 {
