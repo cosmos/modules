@@ -4,7 +4,10 @@ This module will enable mint function. Every address can mint 100(bonded tokens)
 
 For security consideration, you can add this module to your project as you want, but this module would *NOT* be active by default. unless you active it manually by adding `"-tags faucet"` when you build or install. 
 
-## Usage
+这个水龙头模块提供铸币功能，每一个地址都可以发送mint消息为自己铸造一定数量的币，时间间隔为24小时。
+出于安全考虑，你可以随意降本模块加入到你的项目代码中，但是默认是不会生效的，除非在编译的时候加上`-tags faucet`手动激活这个模块
+
+## Usage / 用法
 
 Step 1: import to your app.go
 ```go
@@ -33,24 +36,23 @@ Step 2: add module and permission
 Step 3: add to module manager
 ```go
 
-	app.faucetKeeper = faucet.NewKeeper(app.supplyKeeper, app.stakingKeeper, keys[faucet.StoreKey], app.cdc,)
+	app.faucetKeeper = faucet.NewKeeper(
+		app.supplyKeeper, 
+		app.stakingKeeper, 
+		10 * 1000000,  // amount for mint
+		24 * time.Hour // rate limit by time
+		keys[faucet.StoreKey], 
+		app.cdc,)
 
 	app.mm = module.NewManager(
-		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
-		auth.NewAppModule(app.accountKeeper),
-		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		nameservice.NewAppModule(app.nsKeeper, app.bankKeeper),
+		..., // other modules
 		
-		faucet.NewAppModule(app.faucetKeeper), // faucet module
+		faucet.NewAppModule(app.faucetKeeper), // add faucet module
 		
-		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
-		slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
 	)
 ```
 
-Step 4: enable faucet in Makefile
+Step 4: enable faucet in [Makefile](Makefile_Sample)
 ```
 installWithFaucet: go.sum
 		go install -mod=readonly $(BUILD_FLAGS) -tags faucet ./cmd/nsd
