@@ -5,9 +5,9 @@ This module will enable mint function. Every address can mint 100(bonded tokens)
 For security consideration, you can add this module to your project as you want, but this module would *NOT* be active by default. unless you active it manually by adding `"-tags faucet"` when you build or install. 
 
 这个水龙头模块提供铸币功能，每一个地址都可以发送mint消息为自己铸造一定数量的币，时间间隔为24小时。
-出于安全考虑，你可以随意降本模块加入到你的项目代码中，但是默认是不会生效的，除非在编译的时候加上`-tags faucet`手动激活这个模块
+出于安全考虑，你可以随意将本模块加入到你的项目代码中，但是默认是不会生效的，除非在编译的时候加上`-tags faucet`手动激活这个模块
 
-## Usage / 用法
+## Developer Tutorial
 
 Step 1: import to your app.go
 ```go
@@ -64,7 +64,10 @@ Step 5: build your app
 make installWithFaucet
 ```
 
-Step 6.1: mint some coins
+## Usage / 用法
+
+1: mint some coins for address existed on blockchains
+
 ``` 
 iMac:~ liangping$ nscli tx faucet mint --from ping --chain-id test -y
 {
@@ -91,7 +94,7 @@ iMac:~ liangping$ nscli query account cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskv
 
 ```
 
-Step 6.2: mint some coins for new address.
+2: mint some coins for new address.
 
 Since a new address can not send a tx, it's not possible to mint for itself. You have to ask someone to mint for you, then you can mint youself.
 
