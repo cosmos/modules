@@ -6,11 +6,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/modules/incubator/faucet/client/cli"
+	"github.com/cosmos/modules/incubator/faucet/client/rest"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -43,6 +44,9 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // Register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
+	if profile == TESTNET {
+		rest.RegisterRoutes(ctx, rtr, StoreKey)
+	}
 }
 
 // Get the root query command of this module
@@ -83,14 +87,18 @@ func (am AppModule) Route() string {
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	if profile == TESTNET {
+		return NewHandler(am.keeper)
+	} else {
+		return nil
+	}
 }
 func (am AppModule) QuerierRoute() string {
 	return ModuleName
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
+	return NewQuerier(am.keeper) // unimplement
 }
 
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}

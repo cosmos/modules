@@ -12,9 +12,6 @@ import (
 // NewHandler returns a handler for "faucet" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		if profile != TESTNET {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Unrecognized faucet Msg type: %v", msg.Type()))
-		}
 		switch msg := msg.(type) {
 		case types.MsgMint:
 			return handleMsgMint(ctx, keeper, msg)
