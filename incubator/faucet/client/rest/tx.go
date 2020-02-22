@@ -12,7 +12,6 @@ import (
 // PostProposalReq defines the properties of a proposal request's body.
 type PostMintReq struct {
 	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
-	Sender  string       `json:"sender" yaml:"sender"` // Address of the sender
 	Minter  string       `json:"minter" yaml:"minter"` // Address of the minter
 }
 
@@ -29,13 +28,13 @@ func mintHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		sender, err := sdk.AccAddressFromBech32(req.Sender)
+		sender, err := sdk.AccAddressFromBech32(baseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		minter, err := sdk.AccAddressFromBech32(req.Sender)
+		minter, err := sdk.AccAddressFromBech32(req.Minter)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
