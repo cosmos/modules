@@ -129,6 +129,9 @@ iMac:~ liangping$ nscli query account cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw
 }
 
 ```
+## Compatible Version
+
+ cosmos-sdk v0.38.0 or above
 
 ## Contact Us
 
