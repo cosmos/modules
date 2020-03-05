@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
@@ -106,10 +107,10 @@ func (k Keeper) IterateOwners(ctx sdk.Context, handler func(owner types.Owner) (
 }
 
 // SwapOwners swaps the owners of a NFT ID
-func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress sdk.AccAddress, newAddress sdk.AccAddress) (err sdk.Error) {
+func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress sdk.AccAddress, newAddress sdk.AccAddress) (err error) {
 	oldOwnerIDCollection, found := k.GetOwnerByDenom(ctx, oldAddress, denom)
 	if !found {
-		return types.ErrUnknownCollection(types.DefaultCodespace,
+		return sdkerrors.Wrap(types.ErrUnknownCollection,
 			fmt.Sprintf("id collection %s doesn't exist for owner %s", denom, oldAddress),
 		)
 	}

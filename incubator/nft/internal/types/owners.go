@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // IDCollection defines a set of nft ids that belong to a specific
@@ -42,10 +43,10 @@ func (idCollection IDCollection) AddID(id string) IDCollection {
 }
 
 // DeleteID deletes an ID from an ID Collection
-func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
+func (idCollection IDCollection) DeleteID(id string) (IDCollection, error) {
 	index := idCollection.IDs.find(id)
 	if index == -1 {
-		return idCollection, ErrUnknownNFT(DefaultCodespace,
+		return idCollection, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
 		)
 	}
@@ -129,11 +130,11 @@ func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
 }
 
 // UpdateIDCollection updates the ID Collection of an owner
-func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, sdk.Error) {
+func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, error) {
 	denom := idCollection.Denom
 	index := owner.IDCollections.find(denom)
 	if index == -1 {
-		return owner, ErrUnknownCollection(DefaultCodespace,
+		return owner, sdkerrors.Wrap(ErrUnknownCollection,
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
 		)
 	}
@@ -144,10 +145,10 @@ func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, sdk.Err
 }
 
 // DeleteID deletes an ID from an owners ID Collection
-func (owner Owner) DeleteID(denom string, id string) (Owner, sdk.Error) {
+func (owner Owner) DeleteID(denom string, id string) (Owner, error) {
 	idCollection, found := owner.GetIDCollection(denom)
 	if !found {
-		return owner, ErrUnknownNFT(DefaultCodespace,
+		return owner, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("ID #%s doesn't exist in ID Collection %s", id, denom),
 		)
 	}

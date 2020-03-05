@@ -6,13 +6,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/modules/incubator/nft/internal/keeper"
 	"github.com/cosmos/modules/incubator/nft/internal/types"
 )
 
 // GenericHandler routes the messages to the handlers
 func GenericHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
 		case types.MsgTransferNFT:
 			return HandleMsgTransferNFT(ctx, msg, k)
@@ -23,25 +24,24 @@ func GenericHandler(k keeper.Keeper) sdk.Handler {
 		case types.MsgBurnNFT:
 			return HandleMsgBurnNFT(ctx, msg, k)
 		default:
-			errMsg := fmt.Sprintf("unrecognized nft message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("unrecognized nft message type: %T", msg))
 		}
 	}
 }
 
 // HandleMsgTransferNFT handler for MsgTransferNFT
 func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Keeper,
-) sdk.Result {
+) (*sdk.Result, error) {
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 	// update NFT owner
 	nft.SetOwner(msg.Recipient)
 	// update the NFT (owners are updated within the keeper)
 	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -57,22 +57,22 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 	})
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // HandleMsgEditNFTMetadata handler for MsgEditNFTMetadata
 func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k keeper.Keeper,
-) sdk.Result {
+) (*sdk.Result, error) {
 	nft, err := k.GetNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	// update NFT
 	nft.EditMetadata(msg.TokenURI)
 	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -88,16 +88,16 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 	})
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // HandleMsgMintNFT handles MsgMintNFT
 func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
-) sdk.Result {
+) (*sdk.Result, error) {
 	nft := types.NewBaseNFT(msg.ID, msg.Recipient, msg.TokenURI)
 	err := k.MintNFT(ctx, msg.Denom, &nft)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -114,21 +114,21 @@ func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 	})
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // HandleMsgBurnNFT handles MsgBurnNFT
 func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
-) sdk.Result {
+) (*sdk.Result, error) {
 	_, err := k.GetNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	// remove  NFT
 	err = k.DeleteNFT(ctx, msg.Denom, msg.ID)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -143,7 +143,7 @@ func HandleMsgBurnNFT(ctx sdk.Context, msg types.MsgBurnNFT, k keeper.Keeper,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
 		),
 	})
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // EndBlocker is run at the end of the block

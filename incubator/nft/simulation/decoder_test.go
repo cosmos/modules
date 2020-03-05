@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	kv "github.com/tendermint/tendermint/libs/kv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,10 +32,10 @@ func TestDecodeStore(t *testing.T) {
 	collection := types.NewCollection("kitties", types.NFTs{&nft})
 	idCollection := types.NewIDCollection("kitties", []string{"1", "2", "3"})
 
-	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: types.GetCollectionKey("kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(collection)},
-		cmn.KVPair{Key: types.GetOwnerKey(addr, "kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(idCollection)},
-		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
+	kvPairs := kv.Pairs{
+		kv.Pair{Key: types.GetCollectionKey("kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(collection)},
+		kv.Pair{Key: types.GetOwnerKey(addr, "kitties"), Value: cdc.MustMarshalBinaryLengthPrefixed(idCollection)},
+		kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
 	tests := []struct {

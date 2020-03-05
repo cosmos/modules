@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/modules/incubator/nft/exported"
 )
 
@@ -30,12 +30,12 @@ func EmptyCollection() Collection {
 }
 
 // GetNFT gets a NFT from the collection
-func (collection Collection) GetNFT(id string) (nft exported.NFT, err sdk.Error) {
+func (collection Collection) GetNFT(id string) (nft exported.NFT, err error) {
 	nft, found := collection.NFTs.Find(id)
 	if found {
 		return nft, nil
 	}
-	return nil, ErrUnknownNFT(DefaultCodespace,
+	return nil, sdkerrors.Wrap(ErrUnknownNFT,
 		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
 	)
 }
@@ -47,11 +47,11 @@ func (collection Collection) ContainsNFT(id string) bool {
 }
 
 // AddNFT adds an NFT to the collection
-func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
+func (collection Collection) AddNFT(nft exported.NFT) (Collection, error) {
 	id := nft.GetID()
 	exists := collection.ContainsNFT(id)
 	if exists {
-		return collection, ErrNFTAlreadyExists(DefaultCodespace,
+		return collection, sdkerrors.Wrap(ErrNFTAlreadyExists,
 			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
 		)
 	}
@@ -60,11 +60,11 @@ func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
 }
 
 // UpdateNFT updates an NFT from a collection
-func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, sdk.Error) {
+func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
 
 	if !ok {
-		return collection, ErrUnknownNFT(DefaultCodespace,
+		return collection, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
@@ -73,10 +73,10 @@ func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, sdk.Error)
 }
 
 // DeleteNFT deletes an NFT from a collection
-func (collection Collection) DeleteNFT(nft exported.NFT) (Collection, sdk.Error) {
+func (collection Collection) DeleteNFT(nft exported.NFT) (Collection, error) {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
-		return collection, ErrUnknownNFT(DefaultCodespace,
+		return collection, sdkerrors.Wrap(ErrUnknownNFT,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),
 		)
 	}
