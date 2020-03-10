@@ -9,64 +9,77 @@ For security consideration, you can add this module to your project as you want,
 
 ## Developer Tutorial
 
-Step 1: import to your app.go
+Step 1: Import to your app.go
 ```go
 import (
 	"github.com/cosmos/modules/incubator/faucet"
 )
 ```
 
-Step 2: add module and permission
+Step 2: Declare faucet module and permission in app.go
 ```go
+ModuleBasics = module.NewBasicManager(
+    ..., // the official basic modules
 
-	ModuleBasics = module.NewBasicManager(
-		..., // the official basic modules
+    faucet.AppModule{},  // add faucet module
+)
+// account permissions
+maccPerms = map[string][]string{
+    staking.BondedPoolName:    {supply.Burner, supply.Staking},
+    staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+    faucet.ModuleName          {supply.Minter}, // add permissions for faucet
+}
+	
+type nameServiceApp struct {
+    *bam.BaseApp
+    cdc *codec.Codec
 
-		faucet.AppModule{},
-	)
-	// account permissions
-	maccPerms = map[string][]string{
-		staking.BondedPoolName:    {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
-		faucet.ModuleName          {supply.Minter}, // add permissions for faucet
-	}
+    // Other Keepers ... ...
+    
+    // Declare faucet keeper here
+    faucetKeeper faucet.Keeper
 
+    // Module Manager
+    mm *module.Manager
+
+    // simulation manager
+    sm *module.SimulationManager
+}
 ```
 
-Step 3: add to module manager
+Step 3: Initialize faucet keeper and faucet module in func NewNameserviceApp() in app.go
 ```go
+app.faucetKeeper = faucet.NewKeeper(
+    app.supplyKeeper, 
+    app.stakingKeeper, 
+    10 * 1000000,  // amount for mint
+    24 * time.Hour // rate limit by time
+    keys[faucet.StoreKey], 
+    app.cdc,)
 
-	app.faucetKeeper = faucet.NewKeeper(
-		app.supplyKeeper, 
-		app.stakingKeeper, 
-		10 * 1000000,  // amount for mint
-		24 * time.Hour // rate limit by time
-		keys[faucet.StoreKey], 
-		app.cdc,)
-
-	app.mm = module.NewManager(
-		..., // other modules
-		
-		faucet.NewAppModule(app.faucetKeeper), // add faucet module
-		
-	)
+app.mm = module.NewManager(
+    ..., // other modules
+    
+    faucet.NewAppModule(app.faucetKeeper), // add faucet module
+    
+)
 ```
 
-Step 4: enable faucet in [Makefile](Makefile_Sample)
+Step 4: Enable faucet in [Makefile](Makefile_Sample)
 ```
 installWithFaucet: go.sum
 		go install -mod=readonly $(BUILD_FLAGS) -tags faucet ./cmd/nsd
 		go install -mod=readonly $(BUILD_FLAGS) -tags faucet ./cmd/nscli
 ```
 
-Step 5: build your app
+Step 5: Build your app
 ```
 make installWithFaucet
 ```
 
 ## Usage / 用法
 
-1: mint some coins for address existed on blockchains
+1: Mint coins for addresses existed on blockchains
 
 ``` 
 iMac:~ liangping$ nscli tx faucet mint --from ping --chain-id test -y
@@ -94,7 +107,7 @@ iMac:~ liangping$ nscli query account cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskv
 
 ```
 
-2: mint some coins for new address.
+2: Mint coins for new addresses.
 
 Since a new address can not send a tx, it's not possible to mint for itself. You have to ask someone to mint for you, then you can mint youself.
 
