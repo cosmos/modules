@@ -2,16 +2,14 @@ package types
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 // Mining is a struct that contains all the metadata of a mint
 type Mining struct {
 	Minter   sdk.AccAddress `json:"Minter"`
-	LastTime time.Time      `json:"LastTime"`
+	LastTime int64          `json:"LastTime"`
 	Total    sdk.Coin       `json:"Total"`
 }
 
@@ -19,7 +17,7 @@ type Mining struct {
 func NewMining(minter sdk.AccAddress, coin sdk.Coin) Mining {
 	return Mining{
 		Minter:   minter,
-		LastTime: time.Now(),
+		LastTime: 0,
 		Total:    coin,
 	}
 }

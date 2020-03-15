@@ -12,11 +12,12 @@ const RouterKey = ModuleName // this was defined in your key.go file
 type MsgMint struct {
 	Sender sdk.AccAddress
 	Minter sdk.AccAddress
+	Time   int64
 }
 
 // NewMsgMint is a constructor function for NewMsgMint
-func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress) MsgMint {
-	return MsgMint{Sender: sender, Minter: minter}
+func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress, mTime int64) MsgMint {
+	return MsgMint{Sender: sender, Minter: minter, Time: mTime}
 }
 
 // Route should return the name of the module

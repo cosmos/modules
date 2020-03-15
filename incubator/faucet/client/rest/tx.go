@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/modules/incubator/faucet/internal/types"
 	"net/http"
+	"time"
 )
 
 // PostProposalReq defines the properties of a proposal request's body.
@@ -41,7 +42,7 @@ func mintHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgMint(sender, minter)
+		msg := types.NewMsgMint(sender, minter, time.Now().Unix())
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

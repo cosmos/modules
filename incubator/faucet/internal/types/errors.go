@@ -6,5 +6,5 @@ import (
 
 var (
 	// ErrWithdrawTooOften withdraw too often
-	ErrWithdrawTooOften = sdkerrors.Register(ModuleName, 1, "You can only withdraw once in 24 hours")
+	ErrWithdrawTooOften = sdkerrors.Register(ModuleName, 100, "Each address can withdraw only once")
 )
