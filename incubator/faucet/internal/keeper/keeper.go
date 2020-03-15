@@ -14,7 +14,7 @@ type Keeper struct {
 	SupplyKeeper  types.SupplyKeeper
 	StakingKeeper types.StakingKeeper
 	amount        int64         // set default amount for each mint.
-	limit         time.Duration // rate limiting for mint, etc 24 * time.Hours
+	Limit         time.Duration // rate limiting for mint, etc 24 * time.Hours
 	storeKey      sdk.StoreKey  // Unexposed key to access store from sdk.Context
 	cdc           *codec.Codec  // The wire codec for binary encoding/decoding.
 }
@@ -31,7 +31,7 @@ func NewKeeper(
 		SupplyKeeper:  supplyKeeper,
 		StakingKeeper: stakingKeeper,
 		amount:        amount,
-		limit:         rateLimit,
+		Limit:         rateLimit,
 		storeKey:      storeKey,
 		cdc:           cdc,
 	}
@@ -43,19 +43,20 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // MintAndSend mint coins and send to minter.
-func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress) error {
+func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int64) error {
 
 	mining := k.getMining(ctx, minter)
 
 	// refuse mint in 24 hours
-	if k.isPresent(ctx, minter) && mining.LastTime.Add(k.limit).UTC().After(time.Now().UTC()) {
+	if k.isPresent(ctx, minter) &&
+		time.Unix(mining.LastTime, 0).Add(k.Limit).UTC().After(time.Unix(mintTime, 0)) {
 		return types.ErrWithdrawTooOften
 	}
 
 	denom := k.StakingKeeper.BondDenom(ctx)
 	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.amount))
 	mining.Total = mining.Total.Add(newCoin)
-	mining.LastTime = time.Now()
+	mining.LastTime = mintTime
 	k.setMining(ctx, minter, mining)
 
 	k.Logger(ctx).Info("Mint coin: %s", newCoin)
