@@ -46,7 +46,7 @@ func GetCmdMint(cdc *codec.Codec) *cobra.Command {
 
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgMint(cliCtx.GetFromAddress(), cliCtx.GetFromAddress(), time.Now().Unix())
+			msg := types.NewMsgMint(cliCtx.GetFromAddress(), cliCtx.GetFromAddress(), sdk.NewInt(time.Now().Unix()))
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -71,7 +71,7 @@ func GetCmdMintFor(cdc *codec.Codec) *cobra.Command {
 
 			address, _ := sdk.AccAddressFromBech32(args[0])
 
-			msg := types.NewMsgMint(cliCtx.GetFromAddress(), address, time.Now().Unix())
+			msg := types.NewMsgMint(cliCtx.GetFromAddress(), address, sdk.NewInt(time.Now().Unix()))
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err

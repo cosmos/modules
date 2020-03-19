@@ -12,11 +12,11 @@ const RouterKey = ModuleName // this was defined in your key.go file
 type MsgMint struct {
 	Sender sdk.AccAddress
 	Minter sdk.AccAddress
-	Time   int64
+	Time   sdk.Int
 }
 
 // NewMsgMint is a constructor function for NewMsgMint
-func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress, mTime int64) MsgMint {
+func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress, mTime sdk.Int) MsgMint {
 	return MsgMint{Sender: sender, Minter: minter, Time: mTime}
 }
 
@@ -33,6 +33,9 @@ func (msg MsgMint) ValidateBasic() error {
 	}
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender.String())
+	}
+	if msg.Time.LTE(sdk.NewInt(0)) {
+		return sdkerrors.Wrap(sdk.ErrInvalidDecimalLength, msg.Time.String())
 	}
 	return nil
 }
