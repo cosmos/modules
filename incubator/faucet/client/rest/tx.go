@@ -42,7 +42,7 @@ func mintHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		// create the message
-		msg := types.NewMsgMint(sender, minter, sdk.NewInt(time.Now().Unix()))
+		msg := types.NewMsgMint(sender, minter, time.Now().Unix())
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

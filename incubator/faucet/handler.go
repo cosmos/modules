@@ -26,7 +26,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 func handleMsgMint(ctx sdk.Context, keeper Keeper, msg types.MsgMint) (*sdk.Result, error) {
 
 	keeper.Logger(ctx).Info("received mint message: %s", msg)
-	err := keeper.MintAndSend(ctx, msg.Minter, msg.Time.Int64())
+	err := keeper.MintAndSend(ctx, msg.Minter, msg.Time)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, fmt.Sprintf(",in [%v] hours", keeper.Limit.Hours()))
 	}
