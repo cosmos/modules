@@ -77,48 +77,48 @@ Step 5: Build your app
 make installWithFaucet
 ```
 
+Step 6: Initialize faucet and publish to blockchain.
+
+Create an account with default password "12345678", and publish it to blockchain, therefore others are able to load this account to mint coins.
+
+```
+nscli tx faucet publish --from faucet --chain-id test
+{
+  "chain_id": "test",
+  "account_number": "3",
+  "sequence": "2",
+  "fee": {
+    "amount": [],
+    "gas": "200000"
+  },
+  "msgs": [
+    {
+      "type": "faucet/FaucetKey",
+      "value": {
+        "Sender": "cosmos14pkakt8apdm0e49tzp6gy3lwe8u04ajched5qm",
+        "Armor": "-----BEGIN TENDERMINT KEY INFO-----\ntype: Info\nversion: 0.0.0\n\nZA2tFT0KBHBpbmcSJuta6YchA8yOxBXjUwLzUeBxeECHpLU2GwILK/7OVbMF6uiX\nl/PNGiXhsPebIP3XBLEM0VlX6/whk4LtlqqvYLOduCLGh1yS0OE4SQFWIglzZWNw\nMjU2azE=\n=WAST\n-----END TENDERMINT KEY INFO-----"
+      }
+    }
+  ],
+  "memo": ""
+}
+```
+
+Congratulations, you are ready to mint 
+
 ## Usage / 用法
 
-1: Mint coins for addresses existed on blockchains
+1: Initialize faucet 
 
 ``` 
-iMac:~ liangping$ nscli tx faucet mint --from ping --chain-id test -y
-{
-  "height": "0",
-  "txhash": "A2AD3CA07949FD41CDFCD01678AE9E97946F7DD36DB008F16932C9E231CCFF85",
-  "raw_log": "[]"
-}
-iMac:~ liangping$ nscli query account cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskvgsl --chain-id test 
-{
-  "type": "cosmos-sdk/Account",
-  "value": {
-    "address": "cosmos1ww6g4pdr3nzlyw7d2zcndx4jkrugkjucskvgsl",
-    "coins": [
-      {
-        "denom": "stake",
-        "amount": "11100000000"
-      }
-    ],
-    "public_key": "cosmospub1addwnpepqwqcupvu4z6euqzja7hx354cky3h2vl8ht247rj92n3x3d86l5zlzpslzjx",
-    "account_number": 3,
-    "sequence": 20
-  }
-}
-
+nscli tx faucet init --chain-id test
+The faucet has been loaded successfully.
 ```
 
-2: Mint coins for new addresses.
-
-Since a new address can not send a tx, it's not possible to mint for itself. You have to ask someone to mint for you, then you can mint youself.
-
-**Alternative Approach: (Recommended)**
-
-Publish a mnemonic whose corresponding account(Let's call faucet account) has been actived on blockchain, therefore everyone can import this account and use it to mint for his/her new address.
-
-The faucet account don't need have a large amount of tokens in it.
+2: Mint coins.
 
 ```
-iMac:~ liangping$ nscli tx faucet mintfor cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555 --from ping --chain-id test -y
+iMac:~ liangping$ nscli tx faucet mintfor cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw555 --from faucet --chain-id test -y
 {
   "height": "0",
   "txhash": "40F2AB8AD75B39532622302A71CB84523847D2E43D36B185E0CE65CE60208AB0",
@@ -142,6 +142,17 @@ iMac:~ liangping$ nscli query account cosmos17l3gw079cn5x9d3pqa0jk0xhrw2mt358xvw
 }
 
 ```
+
+Also, you are able to mint for yourself if your address has actived/existed on blockchain.
+```
+$ nscli tx faucet mint --from YOUR_OTHER_ACCOUNT --chain-id test -y
+{
+  "height": "0",
+  "txhash": "40F2AB8AD75B39532622302A71CB84523847D2E43D36B185E0CE65CE60208AB0",
+  "raw_log": "[]"
+}
+```
+
 ## Compatible Version
 
  cosmos-sdk v0.38.0 or above

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const FaucetStoreKey = "DefaultFaucetStoreKey"
+
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
 	SupplyKeeper  types.SupplyKeeper
@@ -99,4 +101,23 @@ func (k Keeper) setMining(ctx sdk.Context, minter sdk.AccAddress, mining types.M
 func (k Keeper) isPresent(ctx sdk.Context, minter sdk.AccAddress) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(minter.Bytes())
+}
+
+func (k Keeper) GetFaucetKey(ctx sdk.Context) types.FaucetKey {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(FaucetStoreKey))
+	var faucet types.FaucetKey
+	k.cdc.MustUnmarshalBinaryBare(bz, &faucet)
+	return faucet
+}
+
+func (k Keeper) SetFaucetKey(ctx sdk.Context, armor string) {
+	store := ctx.KVStore(k.storeKey)
+	faucet := types.NewFaucetKey(armor)
+	store.Set([]byte(FaucetStoreKey), k.cdc.MustMarshalBinaryBare(faucet))
+}
+
+func (k Keeper) HasFaucetKey(ctx sdk.Context) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has([]byte(FaucetStoreKey))
 }

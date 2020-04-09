@@ -31,3 +31,19 @@ func (w Mining) GetMinter() sdk.AccAddress {
 func (w Mining) String() string {
 	return strings.TrimSpace(fmt.Sprintf(`Minter: %s, Time: %s, Total: %s`, w.Minter, w.LastTime, w.Total))
 }
+
+type FaucetKey struct {
+	Armor string `json:" armor"`
+}
+
+// NewFaucetKey create a instance
+func NewFaucetKey(armor string) FaucetKey {
+	return FaucetKey{
+		Armor: armor,
+	}
+}
+
+// implement fmt.Stringer
+func (f FaucetKey) String() string {
+	return strings.TrimSpace(fmt.Sprintf(`Armor: %s`, f.Armor))
+}
