@@ -13,10 +13,10 @@ import (
 
 // MsgTransferNFT defines a TransferNFT message
 type MsgTransferNFT struct {
-	Sender    sdk.AccAddress
-	Recipient sdk.AccAddress
-	Denom     string
-	ID        string
+	Sender    sdk.AccAddress `json:"sender" yaml:"sender"`
+	Recipient sdk.AccAddress `json:"recipient" yaml:"recipient"`
+	Denom     string         `json:"denom" yaml:"denom"`
+	ID        string         `json:"id" yaml:"id"`
 }
 
 // NewMsgTransferNFT is a constructor function for MsgSetName
@@ -70,10 +70,10 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
-	Sender   sdk.AccAddress
-	ID       string
-	Denom    string
-	TokenURI string
+	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`
+	ID       string         `json:"id" yaml:"id"`
+	Denom    string         `json:"denom" yaml:"denom"`
+	TokenURI string         `json:"token_uri" yaml:"token_uri"`
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
@@ -125,11 +125,11 @@ func (msg MsgEditNFTMetadata) GetSigners() []sdk.AccAddress {
 
 // MsgMintNFT defines a MintNFT message
 type MsgMintNFT struct {
-	Sender    sdk.AccAddress
-	Recipient sdk.AccAddress
-	ID        string
-	Denom     string
-	TokenURI  string
+	Sender    sdk.AccAddress `json:"sender" yaml:"sender"`
+	Recipient sdk.AccAddress `json:"recipient" yaml:"recipient"`
+	ID        string         `json:"id" yaml:"id"`
+	Denom     string         `json:"denom" yaml:"denom"`
+	TokenURI  string         `json:"token_uri" yaml:"token_uri"`
 }
 
 // NewMsgMintNFT is a constructor function for MsgMintNFT
@@ -183,9 +183,9 @@ func (msg MsgMintNFT) GetSigners() []sdk.AccAddress {
 
 // MsgBurnNFT defines a BurnNFT message
 type MsgBurnNFT struct {
-	Sender sdk.AccAddress
-	ID     string
-	Denom  string
+	Sender sdk.AccAddress `json:"sender" yaml:"sender"`
+	ID     string         `json:"id" yaml:"id"`
+	Denom  string         `json:"denom" yaml:"denom"`
 }
 
 // NewMsgBurnNFT is a constructor function for MsgBurnNFT
