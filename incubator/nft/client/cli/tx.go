@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/modules/incubator/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/types"
 )
 
 // Edit metadata flags

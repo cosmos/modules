@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/modules/incubator/nft/internal/keeper"
-	"github.com/cosmos/modules/incubator/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/keeper"
+	"github.com/cosmos/modules/incubator/nft/types"
 )
 
 // GenericHandler routes the messages to the handlers
