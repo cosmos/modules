@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/modules/incubator/nft/internal/keeper"
-	"github.com/cosmos/modules/incubator/nft/internal/types"
+	"github.com/cosmos/modules/incubator/nft/keeper"
+	"github.com/cosmos/modules/incubator/nft/types"
 )
 
 func TestSetCollection(t *testing.T) {

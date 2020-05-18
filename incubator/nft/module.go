@@ -18,8 +18,8 @@ import (
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/modules/incubator/nft/client/cli"
 	"github.com/cosmos/modules/incubator/nft/client/rest"
-	"github.com/cosmos/modules/incubator/nft/internal/types"
 	"github.com/cosmos/modules/incubator/nft/simulation"
+	"github.com/cosmos/modules/incubator/nft/types"
 )
 
 var (

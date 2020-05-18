@@ -8,8 +8,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/modules/incubator/nft/exported"
-	keep "github.com/cosmos/modules/incubator/nft/internal/keeper"
-	"github.com/cosmos/modules/incubator/nft/internal/types"
+	keep "github.com/cosmos/modules/incubator/nft/keeper"
+	"github.com/cosmos/modules/incubator/nft/types"
 )
 
 func TestNewQuerier(t *testing.T) {
