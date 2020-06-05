@@ -11,6 +11,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	for _, c := range data.Collections {
 		k.SetCollection(ctx, c.Denom, c)
 	}
+
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
