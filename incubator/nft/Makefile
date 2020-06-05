@@ -38,10 +38,6 @@ test-sim-custom-genesis-multi-seed: runsim
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
 	@$(BINDIR)/runsim -Genesis=${HOME}/.simapp/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
-test-sim-multi-seed-long: runsim
-	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
-
 test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
