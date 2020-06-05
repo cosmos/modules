@@ -109,6 +109,7 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 		}
 
 		ownerAcc, ok := simulation.FindAccount(accs, ownerAddr)
+		ownerAuthAcc := ak.GetAccount(ctx, ownerAddr)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New("could not find acc")
 		}
@@ -118,8 +119,8 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{acc.GetAccountNumber()},
-			[]uint64{acc.GetSequence()},
+			[]uint64{ownerAuthAcc.GetAccountNumber()},
+			[]uint64{ownerAuthAcc.GetSequence()},
 			ownerAcc.PrivKey,
 		)
 
