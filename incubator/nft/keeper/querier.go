@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -56,8 +56,7 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 		return nil, sdkerrors.Wrap(types.ErrUnknownCollection, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	bz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bz, uint64(collection.Supply()))
+	bz := []byte(strconv.Itoa(collection.Supply()))
 	return bz, nil
 }
 
