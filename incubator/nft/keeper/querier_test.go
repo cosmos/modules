@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"encoding/binary"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -62,8 +62,9 @@ func TestQuerySupply(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	supplyResp := binary.LittleEndian.Uint64(res)
-	require.Equal(t, 1, int(supplyResp))
+	supplyResp := string(res)
+	supply, _ := strconv.Atoi(supplyResp)
+	require.Equal(t, 1, supply)
 }
 
 func TestQueryCollection(t *testing.T) {
