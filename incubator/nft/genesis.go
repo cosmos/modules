@@ -9,7 +9,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.SetOwners(ctx, data.Owners)
 
 	for _, c := range data.Collections {
-		k.SetCollection(ctx, c.Denom, c)
+		sortedCollection := NewCollection(c.Denom, c.NFTs.Sort())
+		k.SetCollection(ctx, c.Denom, sortedCollection)
 	}
 }
 
