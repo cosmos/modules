@@ -27,7 +27,7 @@ ModuleBasics = module.NewBasicManager(
 maccPerms = map[string][]string{
     staking.BondedPoolName:    {supply.Burner, supply.Staking},
     staking.NotBondedPoolName: {supply.Burner, supply.Staking},
-    faucet.ModuleName          {supply.Minter}, // add permissions for faucet
+    faucet.ModuleName:          {supply.Minter}, // add permissions for faucet
 }
 	
 type nameServiceApp struct {
@@ -53,7 +53,7 @@ app.faucetKeeper = faucet.NewKeeper(
     app.supplyKeeper, 
     app.stakingKeeper, 
     10 * 1000000,  // amount for mint
-    24 * time.Hour // rate limit by time
+    24 * time.Hour, // rate limit by time
     keys[faucet.StoreKey], 
     app.cdc,)
 
