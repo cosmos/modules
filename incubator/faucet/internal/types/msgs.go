@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	emoji "github.com/tmdvs/Go-Emoji-Utils"
 )
 
 // RouterKey is the module name router key
@@ -13,11 +14,12 @@ type MsgMint struct {
 	Sender sdk.AccAddress
 	Minter sdk.AccAddress
 	Time   int64
+	Denom  string
 }
 
 // NewMsgMint is a constructor function for NewMsgMint
-func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress, mTime int64) MsgMint {
-	return MsgMint{Sender: sender, Minter: minter, Time: mTime}
+func NewMsgMint(sender sdk.AccAddress, minter sdk.AccAddress, mTime int64, denom string) MsgMint {
+	return MsgMint{Sender: sender, Minter: minter, Time: mTime, Denom: denom}
 }
 
 // Route should return the name of the module
@@ -34,6 +36,15 @@ func (msg MsgMint) ValidateBasic() error {
 	if msg.Sender.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender.String())
 	}
+	if !msg.Sender.Equals(msg.Minter) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Can't mint to yourself")
+	}
+
+	results := emoji.FindAll(msg.Denom)
+	if len(results) != 1 {
+		return ErrNoEmoji
+	}
+
 	return nil
 }
 

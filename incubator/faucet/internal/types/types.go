@@ -2,23 +2,24 @@ package types
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Mining is a struct that contains all the metadata of a mint
 type Mining struct {
 	Minter   sdk.AccAddress `json:"Minter"`
 	LastTime int64          `json:"LastTime"`
-	Total    sdk.Coin       `json:"Total"`
+	Tally    int64          `json:"Tally"`
 }
 
 // NewMining returns a new Mining
-func NewMining(minter sdk.AccAddress, coin sdk.Coin) Mining {
+func NewMining(minter sdk.AccAddress, tally int64) Mining {
 	return Mining{
 		Minter:   minter,
 		LastTime: 0,
-		Total:    coin,
+		Tally:    tally,
 	}
 }
 
@@ -29,7 +30,7 @@ func (w Mining) GetMinter() sdk.AccAddress {
 
 // implement fmt.Stringer
 func (w Mining) String() string {
-	return strings.TrimSpace(fmt.Sprintf(`Minter: %s, Time: %s, Total: %s`, w.Minter, w.LastTime, w.Total))
+	return strings.TrimSpace(fmt.Sprintf(`Minter: %s, Time: %s, Tally: %s`, w.Minter, w.LastTime, w.Tally))
 }
 
 type FaucetKey struct {

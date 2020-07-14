@@ -52,6 +52,7 @@ Step 3: Initialize faucet keeper and faucet module in func NewNameserviceApp() i
 app.faucetKeeper = faucet.NewKeeper(
     app.supplyKeeper, 
     app.stakingKeeper, 
+    app.accountKeeper, 
     10 * 1000000,  // amount for mint
     24 * time.Hour // rate limit by time
     keys[faucet.StoreKey], 

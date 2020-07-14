@@ -2,7 +2,9 @@ package faucet
 
 import (
 	"fmt"
+
 	"github.com/cosmos/modules/incubator/faucet/internal/types"
+	emoji "github.com/tmdvs/Go-Emoji-Utils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,7 +28,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
 func handleMsgMint(ctx sdk.Context, keeper Keeper, msg types.MsgMint) (*sdk.Result, error) {
 
 	keeper.Logger(ctx).Info("received mint message: %s", msg)
-	err := keeper.MintAndSend(ctx, msg.Minter, msg.Time)
+
+	results := emoji.FindAll(msg.Denom)
+	if len(results) != 1 {
+		return nil, types.ErrNoEmoji
+	}
+	emo, ok := results[0].Match.(emoji.Emoji)
+	if !ok {
+		return nil, types.ErrNoEmoji
+	}
+	denom := emo.Value
+	err := keeper.MintAndSend(ctx, msg.Minter, msg.Time, denom)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, fmt.Sprintf(",in [%v] hours", keeper.Limit.Hours()))
 	}

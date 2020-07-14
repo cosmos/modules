@@ -2,11 +2,14 @@ package keeper
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/modules/incubator/faucet/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"time"
 )
 
 const FaucetStoreKey = "DefaultFaucetStoreKey"
@@ -15,6 +18,7 @@ const FaucetStoreKey = "DefaultFaucetStoreKey"
 type Keeper struct {
 	SupplyKeeper  types.SupplyKeeper
 	StakingKeeper types.StakingKeeper
+	AccountKeeper auth.AccountKeeper
 	amount        int64         // set default amount for each mint.
 	Limit         time.Duration // rate limiting for mint, etc 24 * time.Hours
 	storeKey      sdk.StoreKey  // Unexposed key to access store from sdk.Context
@@ -25,6 +29,7 @@ type Keeper struct {
 func NewKeeper(
 	supplyKeeper types.SupplyKeeper,
 	stakingKeeper types.StakingKeeper,
+	accountKeeper auth.AccountKeeper,
 	amount int64,
 	rateLimit time.Duration,
 	storeKey sdk.StoreKey,
@@ -32,6 +37,7 @@ func NewKeeper(
 	return Keeper{
 		SupplyKeeper:  supplyKeeper,
 		StakingKeeper: stakingKeeper,
+		AccountKeeper: accountKeeper,
 		amount:        amount,
 		Limit:         rateLimit,
 		storeKey:      storeKey,
@@ -45,9 +51,13 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // MintAndSend mint coins and send to minter.
-func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int64) error {
+func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int64, denom string) error {
 
-	mining := k.getMining(ctx, minter)
+	if denom == k.StakingKeeper.BondDenom(ctx) {
+		return types.ErrCantWithdrawStake
+	}
+
+	mining := k.getMining(ctx, minter, denom)
 
 	// refuse mint in 24 hours
 	if k.isPresent(ctx, minter) &&
@@ -55,9 +65,8 @@ func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int
 		return types.ErrWithdrawTooOften
 	}
 
-	denom := k.StakingKeeper.BondDenom(ctx)
 	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.amount))
-	mining.Total = mining.Total.Add(newCoin)
+	mining.Tally = mining.Tally + k.amount
 	mining.LastTime = mintTime
 	k.setMining(ctx, minter, mining)
 
@@ -67,6 +76,12 @@ func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int
 	if err != nil {
 		return err
 	}
+
+	minterAccount := k.AccountKeeper.GetAccount(ctx, minter)
+	if minterAccount == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s does not exist and is not allowed to receive tokens", minter)
+	}
+
 	err = k.SupplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, minter, sdk.NewCoins(newCoin))
 	if err != nil {
 		return err
@@ -74,11 +89,11 @@ func (k Keeper) MintAndSend(ctx sdk.Context, minter sdk.AccAddress, mintTime int
 	return nil
 }
 
-func (k Keeper) getMining(ctx sdk.Context, minter sdk.AccAddress) types.Mining {
+func (k Keeper) getMining(ctx sdk.Context, minter sdk.AccAddress, denom string) types.Mining {
 	store := ctx.KVStore(k.storeKey)
 	if !k.isPresent(ctx, minter) {
-		denom := k.StakingKeeper.BondDenom(ctx)
-		return types.NewMining(minter, sdk.NewCoin(denom, sdk.NewInt(0)))
+		// denom := k.StakingKeeper.BondDenom(ctx)
+		return types.NewMining(minter, 0)
 	}
 	bz := store.Get(minter.Bytes())
 	var mining types.Mining
@@ -90,7 +105,7 @@ func (k Keeper) setMining(ctx sdk.Context, minter sdk.AccAddress, mining types.M
 	if mining.Minter.Empty() {
 		return
 	}
-	if !mining.Total.IsPositive() {
+	if mining.Tally == 0 {
 		return
 	}
 	store := ctx.KVStore(k.storeKey)
