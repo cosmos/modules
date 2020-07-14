@@ -49,6 +49,18 @@ type nameServiceApp struct {
 
 Step 3: Initialize faucet keeper and faucet module in func NewNameserviceApp() in app.go
 ```go
+keys := sdk.NewKVStoreKeys(
+		bam.MainStoreKey,
+		auth.StoreKey,
+		staking.StoreKey,
+		supply.StoreKey,
+		distr.StoreKey,
+		slashing.StoreKey,
+		params.StoreKey,
+		faucet.StoreKey) // add faucet key
+
+... // some stuff in between
+
 app.faucetKeeper = faucet.NewKeeper(
     app.supplyKeeper, 
     app.stakingKeeper, 
