@@ -27,7 +27,7 @@ ModuleBasics = module.NewBasicManager(
 maccPerms = map[string][]string{
     staking.BondedPoolName:    {supply.Burner, supply.Staking},
     staking.NotBondedPoolName: {supply.Burner, supply.Staking},
-    faucet.ModuleName          {supply.Minter}, // add permissions for faucet
+    faucet.ModuleName:          {supply.Minter}, // add permissions for faucet
 }
 	
 type nameServiceApp struct {
@@ -49,11 +49,23 @@ type nameServiceApp struct {
 
 Step 3: Initialize faucet keeper and faucet module in func NewNameserviceApp() in app.go
 ```go
+keys := sdk.NewKVStoreKeys(
+		bam.MainStoreKey,
+		auth.StoreKey,
+		staking.StoreKey,
+		supply.StoreKey,
+		distr.StoreKey,
+		slashing.StoreKey,
+		params.StoreKey,
+		faucet.StoreKey) // add faucet key
+
+... // some stuff in between
+
 app.faucetKeeper = faucet.NewKeeper(
     app.supplyKeeper, 
     app.stakingKeeper, 
     10 * 1000000,  // amount for mint
-    24 * time.Hour // rate limit by time
+    24 * time.Hour, // rate limit by time
     keys[faucet.StoreKey], 
     app.cdc,)
 
