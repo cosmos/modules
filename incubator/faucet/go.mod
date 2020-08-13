@@ -9,5 +9,5 @@ require (
 	github.com/spf13/viper v1.6.2
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.0
-	github.com/tendermint/tm-db v0.4.0
+	github.com/tendermint/tm-db v0.6.1
 )
