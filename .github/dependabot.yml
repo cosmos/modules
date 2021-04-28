@@ -1,0 +1,41 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/incubator/nft"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  reviewers:
+  - okwme
+  - marbar3778
+  ignore:
+  - dependency-name: github.com/tendermint/tendermint
+    versions:
+    - 0.34.3
+    - 0.34.4
+    - 0.34.7
+    - 0.34.8
+    - 0.34.9
+  - dependency-name: github.com/tendermint/tm-db
+    versions:
+    - 0.6.3
+- package-ecosystem: gomod
+  directory: "/incubator/faucet"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  reviewers:
+  - marbar3778
+  assignees:
+  - marbar3778
+  ignore:
+  - dependency-name: github.com/tendermint/tendermint
+    versions:
+    - 0.34.3
+    - 0.34.4
+    - 0.34.7
+    - 0.34.8
+    - 0.34.9
+  - dependency-name: github.com/tendermint/tm-db
+    versions:
+    - 0.6.3
